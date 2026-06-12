@@ -18,7 +18,7 @@ class POSController extends Controller
         })
         ->get();
 
-        $lowStockProducts = Product::where('stock', '<=', \DB::raw('low_stock_limit'))
+  $lowStockProducts = Product::whereColumn('stock', '<=', 'low_stock_limit')
     ->where('is_active', true)
     ->get();
 
@@ -172,16 +172,14 @@ public function products(Request $request)
         ->distinct()
         ->pluck('category');
 
-    $products = Product::when($category, function($query) use ($category){
-            $query->where('category', $category);
-        });
-
-    // CASHIER ONLY SEES ACTIVE PRODUCTS
-    if(auth()->user()->role !== 'admin'){
-        $products->where('is_active', true);
-    }
-
-    $products = $products->get();
+    $products = Product::query()
+    ->when($category, function($query) use ($category){
+        $query->where('category', $category);
+    })
+    ->when(auth()->user()->role !== 'admin', function($query){
+        $query->where('is_active', true);
+    })
+    ->get();
 
     return view('product', compact(
         'products',
