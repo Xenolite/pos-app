@@ -18,4 +18,9 @@ class Product extends Model
     'price_after_tax',
     'is_active'
     ];
+
+    protected $casts = [
+    'is_active' => 'boolean',
+    'price_after_tax' => 'boolean',
+];
 }
