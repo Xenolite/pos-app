@@ -3,7 +3,8 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
-
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 class AppServiceProvider extends ServiceProvider
 {
     /**
@@ -19,12 +20,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-
-public function boot(): void
-{
-    DB::listen(function ($query) {
+        DB::listen(function ($query) {
         if (str_contains($query->sql, 'is_active')) {
             Log::info('IS_ACTIVE QUERY', [
                 'sql' => $query->sql,
@@ -33,6 +29,5 @@ public function boot(): void
             ]);
         }
     });
-}
     }
 }
