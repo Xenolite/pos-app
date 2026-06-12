@@ -83,7 +83,7 @@ return [
             ]) : [],
         ],
 
-        'pgsql' => [
+'pgsql' => [
     'driver'   => 'pgsql',
     'host'     => env('DB_HOST'),
     'port'     => env('DB_PORT', '5432'),
@@ -93,12 +93,11 @@ return [
     'charset'  => 'utf8',
     'prefix'   => '',
     'schema'   => 'public',
-    'sslmode'  => env('DB_SSLMODE', 'require'), // 👈 add this
+    'sslmode'  => env('DB_SSLMODE', 'require'),
     'options'  => extension_loaded('pdo_pgsql') ? array_filter([
-        PDO::ATTR_EMULATE_PREPARES => true, // 👈 for session pooler
+        PDO::ATTR_EMULATE_PREPARES => true,
     ]) : [],
 ],
-
         'sqlsrv' => [
             'driver' => 'sqlsrv',
             'url' => env('DB_URL'),

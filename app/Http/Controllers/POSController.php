@@ -12,14 +12,14 @@ class POSController extends Controller
     public function index(Request $request)
     {
         $category = $request->category;
-        $products = Product::where('is_active', true)
+        $products = Product::whereRaw('"is_active" = true')
         ->when($category, function ($query) use ($category) {
             $query->where('category', $category);
         })
         ->get();
 
-  $lowStockProducts = Product::whereColumn('stock', '<=', 'low_stock_limit')
-    ->where('is_active', true)
+ $lowStockProducts = Product::whereColumn('stock', '<=', 'low_stock_limit')
+    ->whereRaw('"is_active" = true')
     ->get();
 
     $cart = session()->get('cart', []);
@@ -177,7 +177,7 @@ public function products(Request $request)
         $query->where('category', $category);
     })
     ->when(auth()->user()->role !== 'admin', function($query){
-        $query->where('is_active', true);
+    $query->whereRaw('"is_active" = true');
     })
     ->get();
 
