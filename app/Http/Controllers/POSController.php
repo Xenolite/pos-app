@@ -19,7 +19,7 @@ class POSController extends Controller
         ->get();
 
         $lowStockProducts = Product::where('stock', '<=', \DB::raw('low_stock_limit'))
-    ->where('is_active', 1)
+    ->where('is_active', true)
     ->get();
 
     $cart = session()->get('cart', []);
@@ -178,7 +178,7 @@ public function products(Request $request)
 
     // CASHIER ONLY SEES ACTIVE PRODUCTS
     if(auth()->user()->role !== 'admin'){
-        $products->where('is_active', 1);
+        $products->where('is_active', true);
     }
 
     $products = $products->get();
