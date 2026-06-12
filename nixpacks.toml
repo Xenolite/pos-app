@@ -1,15 +1,15 @@
-# nixpacks.toml
+[phases.setup]
+nixPkgs = ["php83", "php83Extensions.pdo_pgsql", "php83Extensions.pgsql", "composer"]
 
 [phases.install]
-cmds = [
-  "composer install --no-dev --optimize-autoloader"
-]
+cmds = ["composer install --no-dev --optimize-autoloader"]
 
 [phases.build]
 cmds = [
   "php artisan config:clear",
+  "php artisan cache:clear",
   "php artisan storage:link"
 ]
 
 [start]
-cmd = "php -m 2>&1 && php artisan env 2>&1 && php artisan serve --host=0.0.0.0 --port=$PORT 2>&1"
+cmd = "php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=$PORT"
