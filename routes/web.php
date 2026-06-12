@@ -6,6 +6,9 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
 Route::middleware(['auth'])->group(function () {
+    Route::get('/', function () {
+    return redirect()->route('login');
+});
     Route::get('/dashboard', [POSController::class, 'index'])->name('dashboard');
     Route::post('/cart/add', [POSController::class, 'addToCart'])->name('cart.add');
     Route::get('/remove/{id}', [POSController::class, 'removeFromCart']);
