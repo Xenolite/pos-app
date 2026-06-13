@@ -23,4 +23,13 @@ class Product extends Model
     'is_active' => 'boolean',
     'price_after_tax' => 'boolean',
 ];
+
+public function setAttribute($key, $value)
+    {
+        parent::setAttribute($key, $value);
+
+        if (in_array($key, ['is_active', 'price_after_tax'])) {
+            $this->attributes[$key] = $value ? 'true' : 'false';
+        }
+    }
 }
