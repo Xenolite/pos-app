@@ -94,9 +94,10 @@ return [
     'prefix'   => '',
     'schema'   => 'public',
     'sslmode'  => env('DB_SSLMODE', 'require'),
-    'options'  => extension_loaded('pdo_pgsql') ? array_filter([
+    'options'  => extension_loaded('pdo_pgsql') ? [
         PDO::ATTR_EMULATE_PREPARES => true,
-    ]) : [],
+        PDO::ATTR_STRINGIFY_FETCHES => true,
+    ] : [],
 ],
         'sqlsrv' => [
             'driver' => 'sqlsrv',
