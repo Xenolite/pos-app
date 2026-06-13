@@ -36,7 +36,8 @@ class ProductController extends Controller
         'price' => $request->price,
         'stock' => $request->stock,
         'image' => $imagePath,
-        'price_after_tax' => $request->has('price_after_tax'),
+        'price_after_tax' => (bool) $request->has('price_after_tax'),
+        'is_active' => true,
     ]);
 
     return redirect()->route('products')->with('success', 'Product added!');
@@ -60,19 +61,24 @@ public function update(Request $request, $id)
     ]);
 
     $product = Product::findOrFail($id);
-    if ($request->hasFile('image')) {
+    
+    $data = [
+        'name' => $request->name,
+        'category' => $request->category,
+        'price' => $request->price,
+        'buy_price' => $request->buy_price,
+        'stock' => $request->stock,
+        'is_active' => (bool) $request->has('is_active'),
+        'price_after_tax' => (bool) $request->has('price_after_tax'),
+    ];
 
-        // delete old image
+    if ($request->hasFile('image')) {
         if ($product->image) {
             Storage::delete('public/' . $product->image);
         }
-
-        // store new image
-        $path = $request->file('image')->store('products', 'public');
-
-        $data['image'] = $path; // ✅ IMPORTANT
+        $data['image'] = $request->file('image')->store('products', 'public');
     }
-    $data['is_active'] = $request->has('is_active');
+
     $product->update($data);
 
     return redirect()->route('products')
