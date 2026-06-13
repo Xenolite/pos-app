@@ -58,10 +58,11 @@ public function index()
     public function toggleDarkMode()
 {
     $user = auth()->user();
-
-    $user->dark_mode = !$user->dark_mode;
-
-    $user->save();
+    
+    \DB::statement(
+        'UPDATE users SET dark_mode = NOT dark_mode, updated_at = ? WHERE id = ?',
+        [now(), $user->id]
+    );
 
     return back();
 }
