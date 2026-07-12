@@ -23,11 +23,13 @@
                         </label>
 
                         <input type="email"
-                               name="email"
-                               placeholder="example@gmail.com"
-                               class="form-control border-dark rounded-0"
-                               
-                               required>
+                            name="email"
+                            placeholder="example@gmail.com"
+                            class="form-control border-dark rounded-0 {{ $errors->has('email') ? 'is-invalid' : '' }}"
+                            value="{{ old('email') }}"
+                            required>
+
+                        
                     </div>
 
                     <!-- PASSWORD -->
@@ -37,18 +39,43 @@
                         </label>
 
                         <input type="password"
-                               name="password"
-                               class="form-control border-dark rounded-0"
-                               placeholder="Minimum 8 characters"
-                               required>
+                            name="password"
+                            class="form-control border-dark rounded-0 {{ $errors->has('password') ? 'is-invalid' : '' }}"
+                            placeholder="Minimum 8 characters"
+                            required>
+
+                         
                     </div>
 
+                    @if ($errors->any())
+                        <div class="alert alert-danger py-2 mb-3 rounded-0" role="alert">
+                            {{ $errors->first() }}
+                        </div>
+                    @endif
+
                     <!-- LOGIN BUTTON -->
-                    <button style="background: #F97316; " class="btn  w-100 rounded-2">
+                    <button style="background: #F97316;" class="btn w-100 rounded-2">
                         Login
                     </button>
+                    
 
                 </form>
+
+                <!-- DIVIDER -->
+                <div class="d-flex align-items-center my-4">
+                    <hr class="flex-grow-1">
+                    <span class="px-3 text-muted small">OR</span>
+                    <hr class="flex-grow-1">
+                </div>
+
+                <!-- GOOGLE LOGIN -->
+                <a href="{{ route('auth.google') }}"
+                   class="btn btn-outline-dark w-100 rounded-2 d-flex align-items-center justify-content-center gap-2">
+
+                    <img src="https://www.google.com/favicon.ico" alt="" width="16" height="16">
+                    Login with Google
+
+                </a>
 
                 <!-- LINKS -->
                 <div class="text-center mt-4">

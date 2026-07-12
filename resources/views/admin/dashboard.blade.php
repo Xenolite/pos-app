@@ -295,16 +295,16 @@
 <form action="{{ route('admin.toggle.report') }}" method="POST" class="mb-3">
     @csrf
 
-    <div class="mb-2">
+    <!-- <div class="mb-2">
         <input type="email" 
                name="email" 
                class="form-control" 
                placeholder="Enter report email"
                value="{{ optional(\App\Models\Setting::first())->report_email }}"
                required>
-    </div>
+    </div> -->
 
-    <div class="form-check form-switch mb-2">
+    <!-- <div class="form-check form-switch mb-2">
         <input 
             class="form-check-input" 
             type="checkbox" 
@@ -328,7 +328,7 @@
 </form>
 </form>
 
-</div>
+</div> -->
 
 <style>
 

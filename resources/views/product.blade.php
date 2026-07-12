@@ -2,6 +2,32 @@
 
 @section('content')
 
+@if(session('success'))
+<div class="alert alert-success alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3"
+     style="z-index: 9999;" role="alert">
+    {{ session('success') }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+<script>
+    setTimeout(() => {
+        document.querySelector('.alert')?.remove();
+    }, 3000);
+</script>
+@endif
+
+@if(session('error'))
+<div class="alert alert-danger alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3"
+     style="z-index: 9999;" role="alert">
+    {{ session('error') }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+<script>
+    setTimeout(() => {
+        document.querySelector('.alert')?.remove();
+    }, 3000);
+</script>
+@endif
+
 <div class="products-page">
 
     <!-- LEFT SIDEBAR -->
@@ -141,6 +167,21 @@
 
                             <button class="btn-reactivate w-100">
                                 Reactivate
+                            </button>
+
+                        </form>
+
+                        <!--  PERMANENT DELETE  -->
+                        <form action="{{ route('products.forceDelete', $product->id) }}"
+                              method="POST"
+                              class="w-100"
+                              onsubmit="return confirm('DELETE The Product PERMANENTLY? This Action Cannot be Undone.');">
+
+                            @csrf
+                            @method('DELETE')
+
+                            <button class="btn-delete-permanent w-100">
+                                Delete
                             </button>
 
                         </form>
@@ -326,6 +367,7 @@
 
 .product-actions{
     display: flex;
+    flex-wrap: wrap;
     gap: 10px;
 }
 
@@ -358,6 +400,18 @@
 
 .btn-reactivate{
     background: #22c55e;
+    color: white;
+}
+
+.btn-delete-permanent{
+    flex-basis: 100%;
+    background: transparent;
+    color: #ef4444;
+    border: 1.5px solid #ef4444 !important;
+}
+
+.btn-delete-permanent:hover{
+    background: #ef4444;
     color: white;
 }
 

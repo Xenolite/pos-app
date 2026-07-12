@@ -49,4 +49,20 @@
             </x-primary-button>
         </div>
     </form>
+
+    <!-- DIVIDER -->
+    <div class="flex items-center my-4">
+        <hr class="flex-grow border-gray-300">
+        <span class="px-3 text-sm text-gray-500">OR</span>
+        <hr class="flex-grow border-gray-300">
+    </div>
+
+    <!-- GOOGLE SIGNUP -->
+    <a href="{{ route('auth.google') }}"
+       class="w-full flex items-center justify-center gap-2 border border-gray-300 rounded-md py-2 text-sm text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+
+        <img src="https://www.google.com/favicon.ico" alt="" class="w-4 h-4">
+        {{ __('Sign up with Google') }}
+
+    </a>
 </x-guest-layout>

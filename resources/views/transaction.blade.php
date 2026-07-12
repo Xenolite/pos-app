@@ -15,18 +15,22 @@
            
         </div>
 
-        <!-- SEARCH -->
-        <form method="GET"
-              action="{{ route('transactions') }}"
-              class="search-form">
+        <div class="d-flex align-items-center gap-2">
 
-            <input type="text"
-                   name="search"
-                   value="{{ $search }}"
-                   placeholder="Search transaction ID..."
-                   class="search-input">
+            <!-- SEARCH -->
+            <form method="GET"
+                  action="{{ route('transactions') }}"
+                  class="search-form">
 
-        </form>
+                <input type="text"
+                       name="search"
+                       value="{{ $search }}"
+                       placeholder="Search transaction ID..."
+                       class="search-input">
+
+            </form>
+
+        </div>
 
     </div>
     <div class="filter-card mb-4">
@@ -118,13 +122,19 @@
             </div>
 
             <!-- BUTTON -->
-            <div class="col-md-3 d-flex align-items-end">
+            <div class="col-md-3 d-flex align-items-end gap-2">
 
                 <button class="btn btn-warning w-100">
 
                     Filter
 
                 </button>
+
+                <!-- EXPORT EXCEL (ikut filter yang sedang aktif) -->
+                <a href="{{ route('transactions.export', request()->query()) }}"
+                   class="export-btn w-100 text-center">
+                    Export Excel
+                </a>
 
             </div>
 
@@ -148,6 +158,7 @@
                     <th>Profit</th>
                     <th>Service</th>
                     <th>Payment</th>
+                    <th>Status</th>
                     <th>Action</th>
                 </tr>
 
@@ -186,6 +197,20 @@
                         {{ $transaction->payment_method }}
                     </td>
                     <td>
+                        @php
+                            $statusColors = [
+                                'paid' => '#198754',
+                                'pending' => '#F97316',
+                                'failed' => '#dc3545',
+                                'expired' => '#6c757d',
+                            ];
+                            $statusColor = $statusColors[$transaction->payment_status] ?? '#6c757d';
+                        @endphp
+                        <span style="color: {{ $statusColor }}; font-weight: 600; text-transform: capitalize;">
+                            {{ $transaction->payment_status }}
+                        </span>
+                    </td>
+                    <td>
 
                         <button class="view-btn"
                                 data-bs-toggle="modal"
@@ -199,77 +224,11 @@
 
                 </tr>
 
-                <!-- MODAL -->
-                <div class="modal fade"
-                     id="transactionModal{{ $transaction->id }}"
-                     tabindex="-1">
-
-                    <div class="modal-dialog modal-lg">
-
-                        <div class="modal-content">
-
-                            <div class="modal-header">
-
-                                <h5 class="modal-title">
-                                    Transaction #{{ $transaction->id }}
-                                </h5>
-
-                                <button type="button"
-                                        class="btn-close"
-                                        data-bs-dismiss="modal">
-                                </button>
-
-                            </div>
-
-                            <div class="modal-body">
-
-                                @foreach($transaction->items as $item)
-
-                                <div class="d-flex justify-content-between mb-3">
-
-                                    <div>
-                                        <strong>
-                                            {{ $item->product->name ?? 'Deleted Product' }}
-                                        </strong>
-
-                                        <br>
-
-                                        {{ $item->quantity }}x
-                                    </div>
-
-                                    <div>
-                                        Rp {{ number_format($item->price * $item->quantity) }}
-                                    </div>
-
-                                </div>
-
-                                @endforeach
-
-                                <hr>
-
-                                <div class="d-flex justify-content-between">
-
-                                    <strong>Total</strong>
-
-                                    <strong>
-                                        Rp {{ number_format($transaction->total) }}
-                                    </strong>
-
-                                </div>
-
-                            </div>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
                 @empty
 
                 <tr>
 
-                    <td colspan="7" class="text-center py-5 text-muted">
+                    <td colspan="9" class="text-center py-5 text-muted">
                         No transactions found
                     </td>
 
@@ -287,6 +246,122 @@
     <div class="mt-4">
         {{ $transactions->links() }}
     </div>
+
+    <!-- MODALS (dipindahkan ke luar <table>; sebelumnya berada di dalam <tbody> sehingga browser
+         memaksa-keluarkan <div> modal dari tabel, membuat tampilan tabel rusak) -->
+    @foreach($transactions as $transaction)
+
+    <div class="modal fade"
+         id="transactionModal{{ $transaction->id }}"
+         tabindex="-1">
+
+        <div class="modal-dialog modal-lg">
+
+            <div class="modal-content">
+
+                <div class="modal-header">
+
+                    <h5 class="modal-title">
+                        Transaction #{{ $transaction->id }}
+                    </h5>
+
+                    <button type="button"
+                            class="btn-close"
+                            data-bs-dismiss="modal">
+                    </button>
+
+                </div>
+
+                <div class="modal-body">
+
+                    <!-- INFO -->
+                    <div class="transaction-info mb-4">
+
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="text-muted">Date</span>
+                            <span>{{ $transaction->created_at->format('d M Y, H:i') }}</span>
+                        </div>
+
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="text-muted">Cashier</span>
+                            <span>{{ $transaction->user->name ?? '-' }}</span>
+                        </div>
+
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="text-muted">Payment Method</span>
+                            <span>{{ $transaction->payment_method }}</span>
+                        </div>
+
+                    </div>
+
+                    <hr>
+
+                    <!-- ITEMS -->
+                    @php
+                        $itemsSubtotal = 0;
+                    @endphp
+
+                    <table class="detail-table">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th class="text-center">Qty</th>
+                                <th class="text-end">Unit Price</th>
+                                <th class="text-end">Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($transaction->items as $item)
+                            @php
+                                $lineTotal = $item->price * $item->quantity;
+                                $itemsSubtotal += $lineTotal;
+                            @endphp
+                            <tr>
+                                <td>{{ $item->product->name ?? 'Deleted Product' }}</td>
+                                <td class="text-center">{{ $item->quantity }}x</td>
+                                <td class="text-end">Rp {{ number_format($item->price) }}</td>
+                                <td class="text-end">Rp {{ number_format($lineTotal) }}</td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+
+                    <hr>
+
+                    <!-- BREAKDOWN -->
+                    <div class="d-flex justify-content-between mb-1">
+                        <span class="text-muted">Subtotal</span>
+                        <span>Rp {{ number_format($itemsSubtotal) }}</span>
+                    </div>
+
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">Service Charge</span>
+                        <span>Rp {{ number_format($transaction->service_charge ?? 0) }}</span>
+                    </div>
+
+                    <hr>
+
+                    <div class="d-flex justify-content-between mb-1">
+                        <strong>Total</strong>
+                        <strong>Rp {{ number_format($transaction->total) }}</strong>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <span class="text-muted">Profit</span>
+                        <span class="text-primary fw-bold">
+                            Rp {{ number_format($transaction->profit) }}
+                        </span>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    @endforeach
 
 </div>
 
@@ -346,6 +421,48 @@
 
 .view-btn:hover{
     background: #ea580c;
+}
+
+.export-btn{
+    background: #198754;
+    border: none;
+    color: white;
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-weight: 600;
+    text-decoration: none;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.export-btn:hover{
+    background: #146c43;
+    color: white;
+}
+
+.transaction-info{
+    font-size: 14px;
+}
+
+.detail-table{
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+.detail-table thead th{
+    text-align: left;
+    color: #666;
+    font-weight: 600;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #ddd;
+}
+
+.detail-table tbody td{
+    padding: 8px 0;
+    border-bottom: 1px solid #f0f0f0;
 }
 
 </style>

@@ -25,8 +25,13 @@
             <!-- Category -->
             <div class="mb-3">
                 <label>Category</label>
-                <input type="text" name="category" class="form-control"
+                <input type="text" name="category" class="form-control" list="categoryList"
                     value="{{ $product->category }}" required>
+                <datalist id="categoryList">
+                    @foreach($categories as $cat)
+                        <option value="{{ $cat }}">
+                    @endforeach
+                </datalist>
             </div>
 
             <!-- Buy Price -->
@@ -52,12 +57,10 @@
             </div>
 
             <!-- Tax Option -->
-            <div class="mb-3">
-                <label>Price After Tax?</label>
-                <select name="after_tax" class="form-control">
-                    <option value="0" {{ !$product->after_tax ? 'selected' : '' }}>No</option>
-                    <option value="1" {{ $product->after_tax ? 'selected' : '' }}>Yes</option>
-                </select>
+            <div class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" name="price_after_tax" id="taxCheck"
+                    {{ $product->price_after_tax ? 'checked' : '' }}>
+                <label class="form-check-label">Price includes tax (10%)</label>
             </div>
 
             <!-- Stock -->

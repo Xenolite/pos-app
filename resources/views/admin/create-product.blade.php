@@ -17,32 +17,37 @@
 
 <div class="mb-3">
     <label>Name</label>
-    <input type="text" name="name" class="form-control">
+    <input type="text" name="name" class="form-control" required>
 </div>
 
 <div class="mb-2">
     <label>Category</label>
-    <input type="text" name="category" class="form-control" required>
+    <input type="text" name="category" class="form-control" list="categoryList" required>
+    <datalist id="categoryList">
+        @foreach($categories as $cat)
+            <option value="{{ $cat }}">
+        @endforeach
+    </datalist>
 </div>
 
 <div class="mb-3">
     <label>Buy Price</label>
-    <input type="number" id="buy_price" name="buy_price" class="form-control">
+    <input type="number" id="buy_price" name="buy_price" class="form-control" required>
 </div>
 
 <div class="mb-3">
     <label>Sell Price</label>
-    <input type="number" id="sell_price" name="price" class="form-control">
+    <input type="number" id="sell_price" name="price" class="form-control" required>
 </div>
 
-<!-- 🔥 Margin Buttons -->
+<!--  Margin Buttons -->
 <div class="mb-3">
     <button type="button" class="btn btn-outline-primary btn-sm" onclick="setMargin(5)">+5%</button>
     <button type="button" class="btn btn-outline-primary btn-sm" onclick="setMargin(15)">+15%</button>
     <button type="button" class="btn btn-outline-primary btn-sm" onclick="setMargin(20)">+20%</button>
 </div>
 
-<!-- 🔥 After Tax -->
+<!-- After Tax -->
 <div class="form-check mb-3">
     <input type="checkbox" name="price_after_tax" id="taxCheck" class="form-check-input">
     <label class="form-check-label">Price includes tax (10%)</label>
@@ -53,7 +58,7 @@
     <input type="number" name="stock" class="form-control">
 </div>
 
-<!-- 🔥 Image Upload -->
+<!-- Image Upload -->
 <div class="mb-3">
     <label>Product Image</label>
     <input type="file" name="image" class="form-control" accept="image/png, image/jpeg">

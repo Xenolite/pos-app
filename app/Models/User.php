@@ -23,11 +23,15 @@ class User extends Authenticatable
         'password',
         'last_login_at',
         'is_online',
-        'dark_mode'
+        'dark_mode',
+        'google_id',
+        'avatar',
+        'role',
+        'phone',
     ];
 
     /**
-     * The attributes that should be hidden for serialization.
+     *
      *
      * @var list<string>
      */
@@ -37,7 +41,7 @@ class User extends Authenticatable
     ];
 
     /**
-     * Get the attributes that should be cast.
+     * 
      *
      * @return array<string, string>
      */

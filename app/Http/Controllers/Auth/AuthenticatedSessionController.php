@@ -46,6 +46,7 @@ class AuthenticatedSessionController extends Controller
 
     if($user){
         $user->last_logout_at = now();
+        $user->is_online = false;
         $user->save();
     }
 

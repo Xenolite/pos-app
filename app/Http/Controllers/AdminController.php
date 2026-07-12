@@ -11,6 +11,7 @@ use App\Models\Setting;
 use App\Models\User;
 use Carbon\CarbonPeriod;
 use App\Models\TransactionItem;
+use Illuminate\Support\Facades\Hash;
 class AdminController extends Controller
 {
     public function dashboard(Request $request)
@@ -159,7 +160,7 @@ class AdminController extends Controller
         $setting = new \App\Models\Setting();
     }
 
-    $setting->report_enabled = $request->has('report_enabled'); // ✅ checkbox
+    $setting->report_enabled = $request->has('report_enabled'); // checkbox
     $setting->report_email = $request->email;
     $setting->save();
 
@@ -260,5 +261,52 @@ public function storeAccount(Request $request)
     ]);
 
     return back()->with('success', 'Account created');
+}
+
+public function updateAccount(Request $request, User $user)
+{
+    $isGoogleAccount = ! empty($user->google_id);
+
+    $request->validate([
+        'name' => 'required',
+        'email' => $isGoogleAccount
+            ? 'prohibited'
+            : 'required|email|unique:users,email,'.$user->id,
+        'role' => 'required',
+        'password' => $isGoogleAccount
+            ? 'prohibited'
+            : 'nullable|min:6',
+    ], [
+        'email.prohibited' => 'Email cannot be changed for accounts linked to Google.',
+        'password.prohibited' => 'Password cannot be changed for accounts linked to Google.',
+    ]);
+
+    $user->name = $request->name;
+    $user->phone = $request->phone;
+    $user->role = $request->role;
+
+
+    if (! $isGoogleAccount) {
+        $user->email = $request->email;
+
+        if ($request->filled('password')) {
+            $user->password = Hash::make($request->password);
+        }
+    }
+
+    $user->save();
+
+    return back()->with('success', 'Account updated');
+}
+
+public function deleteAccount(User $user)
+{
+    if ($user->id === auth()->id()) {
+        return back()->with('error', 'You cannot delete your own account while logged in.');
+    }
+
+    $user->delete();
+
+    return back()->with('success', 'Account deleted');
 }
 }

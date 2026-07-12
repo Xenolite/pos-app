@@ -134,6 +134,10 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
+<!-- Midtrans Snap.js (sandbox). Ganti ke https://app.midtrans.com/snap/snap.js untuk production. -->
+<script src="https://app.sandbox.midtrans.com/snap/snap.js"
+        data-client-key="{{ config('services.midtrans.client_key') }}"></script>
+
 @yield('scripts')
      
 </body>

@@ -1,6 +1,18 @@
 @extends('layouts.app')
 
 @section('content')
+@if(session('error'))
+<div class="alert alert-secondary alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3"
+     style="z-index: 9999;" role="alert">
+    {{ session('error') }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+<script>
+    setTimeout(() => {
+        document.querySelector('.alert')?.remove();
+    }, 3000);
+</script>
+@endif
 
 <div class="profile-page">
 
@@ -195,7 +207,9 @@
 
                         <input type="password"
                                name="password"
-                               class="form-control">
+                               class="form-control"
+                               oninput="validatePasswordLength()">
+                               
                     </div>
 
                     <div class="mb-3">
@@ -293,5 +307,18 @@
     transform: translateY(-1px);
 }
 </style>
+<script>
+function validatePasswordLength() {
+    const input = document.getElementById('newPassword');
+    const error = document.getElementById('passwordError');
 
+    if (input.value.length > 0 && input.value.length < 8) {
+        input.classList.add('is-invalid');
+        error.style.display = 'block';
+    } else {
+        input.classList.remove('is-invalid');
+        error.style.display = 'none';
+    }
+}
+</script>
 @endsection

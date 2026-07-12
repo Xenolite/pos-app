@@ -5,12 +5,15 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Product;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 class ProductController extends Controller
 {
     
     public function create()
     {
-        return view('admin.create-product');
+        $categories = Product::select('category')->distinct()->orderBy('category')->pluck('category');
+
+        return view('admin.create-product', compact('categories'));
     }
 
     public function store(Request $request)
@@ -31,7 +34,7 @@ class ProductController extends Controller
 
     Product::create([
         'name' => $request->name,
-        'category' => $request->category,
+        'category' => Str::title(trim($request->category)),
         'buy_price' => $request->buy_price,
         'price' => $request->price,
         'stock' => $request->stock,
@@ -46,7 +49,9 @@ class ProductController extends Controller
     public function edit($id)
 {
     $product = Product::findOrFail($id);
-    return view('admin.edit-product', compact('product'));
+    $categories = Product::select('category')->distinct()->orderBy('category')->pluck('category');
+
+    return view('admin.edit-product', compact('product', 'categories'));
 }
 
 public function update(Request $request, $id)
@@ -64,7 +69,7 @@ public function update(Request $request, $id)
     
     $data = [
         'name' => $request->name,
-        'category' => $request->category,
+        'category' => Str::title(trim($request->category)),
         'price' => $request->price,
         'buy_price' => $request->buy_price,
         'stock' => $request->stock,
@@ -117,5 +122,25 @@ public function activate($id)
 
     return redirect()->route('products')
         ->with('success', 'Product reactivated!');
+}
+
+public function forceDelete($id)
+{
+    $product = Product::findOrFail($id);
+
+    try {
+        if ($product->image) {
+            Storage::delete('public/'.$product->image);
+        }
+
+        $product->delete();
+    } catch (\Illuminate\Database\QueryException $e) {
+
+        return redirect()->route('products')
+            ->with('error', 'Product cannot be permanently deleted because it has transaction history. Use Deactivate instead.');
+    }
+
+    return redirect()->route('products')
+        ->with('success', 'Product permanently deleted!');
 }
 }

@@ -11,7 +11,16 @@ class Transaction extends Model
         'total',
         'profit',
         'service_charge',
-        'payment_method'
+        'payment_method',
+        'payment_status',
+        'midtrans_order_id',
+        'snap_token',
+        'payment_type',
+        'paid_at',
+    ];
+
+    protected $casts = [
+        'paid_at' => 'datetime',
     ];
 
     public function items()

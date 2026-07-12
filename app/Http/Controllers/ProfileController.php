@@ -45,6 +45,8 @@ public function index()
 
         $user = auth()->user();
 
+        
+
         if(!Hash::check($request->current_password, $user->password)){
             return back()->with('error', 'Current password incorrect');
         }
