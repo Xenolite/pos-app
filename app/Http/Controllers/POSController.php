@@ -200,9 +200,19 @@ class POSController extends Controller
         'payment_status' => 'pending',
     ]);
 
-    // Simpan isi cart di transaksi supaya bisa diproses ulang saat webhook masuk
-    // (session cart akan kosong begitu customer pindah/refresh halaman).
-    session()->put('pending_cart_'.$transaction->id, $cart);
+    // Simpan item pesanan LANGSUNG ke database (bukan session) supaya bisa
+    // dibaca lagi saat webhook Midtrans masuk. Webhook adalah request
+    // server-to-server dari Midtrans, jadi TIDAK membawa session cookie
+    // milik kasir/customer -- data yang disimpan di session tidak akan bisa
+    // diakses dari situ. Stok belum dipotong di sini, baru dipotong di
+    // markTransactionPaid() begitu pembayaran dikonfirmasi sukses.
+    $this->saveTransactionItems($transaction, $cart);
+
+    // Cart langsung dikosongkan begitu order dibuat (bukan menunggu pembayaran
+    // selesai) -- sama seperti alur Cash, supaya panel cart di dashboard tidak
+    // menampilkan item yang sudah "dipesan". Kalau customer batal bayar,
+    // transaksi ini tetap tercatat di riwayat dengan status pending/expired/failed.
+    session()->forget('cart');
 
     $orderId = 'POS-'.$transaction->id.'-'.time();
 
@@ -293,9 +303,16 @@ private function markTransactionPaid(Transaction $transaction, $notification)
         'paid_at' => now(),
     ]);
 
-    $cart = session()->pull('pending_cart_'.$transaction->id, []);
+    // Item sudah tersimpan sejak checkout(), di sini tinggal potong stoknya.
+    foreach ($transaction->items as $item) {
 
-    $this->deductStockAndSaveItems($transaction, $cart);
+        $product = $item->product;
+
+        if ($product && $product->stock >= $item->quantity) {
+            $product->stock -= $item->quantity;
+            $product->save();
+        }
+    }
 }
 
 private function deductStockAndSaveItems(Transaction $transaction, array $cart)
@@ -318,6 +335,29 @@ private function deductStockAndSaveItems(Transaction $transaction, array $cart)
                 'buy_price' => $product->buy_price
             ]);
         }
+    }
+}
+
+/**
+ * Simpan item transaksi TANPA memotong stok -- dipakai untuk transaksi
+ * non-cash yang masih berstatus "pending" menunggu konfirmasi webhook.
+ * Stok baru dipotong belakangan di markTransactionPaid().
+ */
+private function saveTransactionItems(Transaction $transaction, array $cart)
+{
+    foreach ($cart as $id => $item) {
+
+        $product = Product::find($id);
+
+        if (! $product) continue;
+
+        TransactionItem::create([
+            'transaction_id' => $transaction->id,
+            'product_id' => $id,
+            'quantity' => $item['quantity'],
+            'price' => $item['price'],
+            'buy_price' => $product->buy_price
+        ]);
     }
 }
 
