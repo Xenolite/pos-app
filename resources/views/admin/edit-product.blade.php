@@ -70,12 +70,12 @@
                     value="{{ $product->stock }}" required>
             </div>
 
-            <!-- Active Toggle -->
+            <!-- Active Toggle
             <div class="form-check form-switch mb-3">
                 <input class="form-check-input" type="checkbox" name="is_active"
                     {{ $product->is_active ? 'checked' : '' }}>
                 <label class="form-check-label">Active Product</label>
-            </div>
+            </div> -->
 
         </div>
 
