@@ -87,28 +87,34 @@
         <!-- MENU -->
         <div class="menu-center">
 
-            <a href="{{ route('dashboard') }}" class="menu-item {{ request()->routeIs('dashboard') ? 'active-menu' : '' }}">
-                
-                <span>POS</span>
+            <a  href="{{ route('dashboard') }}" class="menu-item {{ request()->routeIs('dashboard') ? 'active-menu' : '' }}">
+                <i class="bi bi-shop"></i>
+                <span >POS</span>
             </a>
 
             
 
             <a href="{{ route('products') }}"
-   class="menu-item {{ request()->routeIs('products') ? 'active-menu' : '' }}">
-
-    Product
-</a>
+                class="menu-item {{ request()->routeIs('products') ? 'active-menu' : '' }}">
+                <i class="bi bi-box-seam"></i>
+                Product
+            </a>
 
             <a href="{{ route('transactions') }}"
-   class="menu-item {{ request()->routeIs('transactions') ? 'active-menu' : '' }}">
+                class="menu-item {{ request()->routeIs('transactions') ? 'active-menu' : '' }}">
+                <i class="bi bi-receipt"></i>
+                Transactions
+            </a>
 
-     Transactions
-</a>
+            <a href="{{ route('transactions.summary') }}"
+                class="menu-item {{ request()->routeIs('transactions.summary') ? 'active-menu' : '' }}">
+                <i class="bi bi-graph-up"></i>
+                Sales Summary
+            </a>
 
             @if(auth()->user()->role === 'admin')
             <a href="{{ route('admin.dashboard') }}"  class="menu-item {{ request()->routeIs('admin.dashboard') ? 'active-menu' : '' }}">
-                
+                <i class="bi bi-house-gear"></i>
                 <span>Admin</span>
             </a>
             @endif
@@ -119,8 +125,9 @@
         <div class="user-section">
 
             <div>
+                <i class="mx-2 bi bi-person-square "></i>
                 <a href="{{ route('profile.page') }}" class="navbar-username" title="{{ auth()->user()->name }}">
-                👤 {{ \Illuminate\Support\Str::limit(auth()->user()->name, 15) }}
+                {{ \Illuminate\Support\Str::limit(auth()->user()->name, 15) }}
             </a>
             </div>
 
@@ -142,6 +149,7 @@
     </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
 <!-- Midtrans Snap.js (sandbox). Ganti ke https://app.midtrans.com/snap/snap.js untuk production. -->
 <script src="https://app.sandbox.midtrans.com/snap/snap.js"
@@ -249,7 +257,10 @@
     color: #ffffff;
     font-weight: 600;
 }
-
+.dark-mode .product-stock{
+    color: #ffffff;
+    margin-bottom: 20px;
+}
 .dark-mode .account-table td{
     padding: 18px;
     border-bottom: 1px solid #f3f3f3;
@@ -347,5 +358,32 @@
     padding: 40px 20px;
     font-weight: bold;
     box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+.dark-mode .summary-single-card{
+    background: #595959;
+    border-radius: 20px;
+    padding: 30px;
+    border: 1px solid #ddd;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+}
+.dark-mode .detail-table thead th{
+    text-align: left;
+    color: #ffffff;
+    font-weight: 600;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #ddd;
+}
+
+.dark-mode .detail-table tbody td{
+    padding: 10px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+.dark-mode .order-table thead th{
+    text-align: left;
+    font-size: 13px;
+    color: #ffffff;
+    font-weight: 600;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #ccc;
 }
 </style>

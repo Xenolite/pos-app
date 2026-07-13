@@ -155,10 +155,10 @@
                     Filter
 
                 </button>
-
+                
                 <!-- EXPORT EXCEL (ikut filter yang sedang aktif) -->
                 <a href="{{ route('transactions.export', request()->query()) }}"
-                   class="export-btn w-100 text-center">
+                   class="btn btn-success w-100 text-center">
                     Export Excel
                 </a>
 

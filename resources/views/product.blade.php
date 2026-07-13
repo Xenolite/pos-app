@@ -135,8 +135,8 @@
 
                         <!-- EDIT -->
                         <a href="{{ route('products.edit', $product->id) }}"
-                           class="btn-edit">
-
+                           class="btn-edit ">
+                            <i class="bi bi-wrench mx-1"></i>
                             Edit
 
                         </a>

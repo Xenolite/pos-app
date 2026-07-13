@@ -31,14 +31,14 @@
 
     <div class="col-md-4 d-flex align-items-end">
         <button class="btn btn-warning w-100">
-            Apply Filter
+            Filter
         </button>
     </div>
 
 </form>
 
         <h2 class="fw-bold">
-            Sales Summary This Month
+            Sales Summary
         </h2>
 
     </div>
@@ -291,9 +291,9 @@
 </div>
 
 
-<h6>Sales Report</h6>
+<!-- <h6>Sales Report</h6>
 <form action="{{ route('admin.toggle.report') }}" method="POST" class="mb-3">
-    @csrf
+    @csrf -->
 
     <!-- <div class="mb-2">
         <input type="email" 

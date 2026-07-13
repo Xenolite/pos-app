@@ -453,6 +453,83 @@ public function transactions(Request $request)
     return view('transaction', compact('transactions','search'));
 }
 
+public function transactionSummary(Request $request)
+{
+    // FILTER JANGKA WAKTU (period): today, week, month, year, atau custom (start_date/end_date)
+    $period = $request->period ?: 'month';
+
+    if ($period === 'custom' && $request->start_date && $request->end_date) {
+        $startDate = Carbon::parse($request->start_date)->startOfDay();
+        $endDate = Carbon::parse($request->end_date)->endOfDay();
+    } else {
+        switch ($period) {
+            case 'today':
+                $startDate = Carbon::today();
+                $endDate = Carbon::today()->endOfDay();
+                break;
+            case 'week':
+                $startDate = Carbon::now()->startOfWeek();
+                $endDate = Carbon::now()->endOfWeek();
+                break;
+            case 'year':
+                $startDate = Carbon::now()->startOfYear();
+                $endDate = Carbon::now()->endOfYear();
+                break;
+            case 'month':
+            default:
+                $period = 'month';
+                $startDate = Carbon::now()->startOfMonth();
+                $endDate = Carbon::now()->endOfMonth();
+                break;
+        }
+    }
+
+    // Hanya transaksi yang berhasil (paid) yang dihitung sebagai penjualan
+    $baseQuery = Transaction::query()
+        ->where('payment_status', 'paid')
+        ->whereBetween('created_at', [$startDate, $endDate]);
+
+    // RINGKASAN UTAMA
+    $totalSales = (clone $baseQuery)->sum('total');
+    $totalProfit = (clone $baseQuery)->sum('profit');
+    $totalServiceCharge = (clone $baseQuery)->sum('service_charge');
+    $totalTransactions = (clone $baseQuery)->count();
+    $averageTransaction = $totalTransactions > 0 ? $totalSales / $totalTransactions : 0;
+
+    // BREAKDOWN PER METODE PEMBAYARAN
+    $paymentBreakdown = (clone $baseQuery)
+        ->selectRaw('payment_method, COUNT(*) as total_count, SUM(total) as total_amount')
+        ->groupBy('payment_method')
+        ->orderByDesc('total_amount')
+        ->get();
+
+    // PRODUK TERLARIS PADA PERIODE INI
+    $topProducts = TransactionItem::query()
+        ->whereHas('transaction', function ($query) use ($startDate, $endDate) {
+            $query->where('payment_status', 'paid')
+                  ->whereBetween('created_at', [$startDate, $endDate]);
+        })
+        ->selectRaw('product_id, SUM(quantity) as total_sold, SUM(price * quantity) as total_revenue')
+        ->groupBy('product_id')
+        ->orderByDesc('total_sold')
+        ->with('product')
+        ->take(10)
+        ->get();
+
+    return view('transaction_summary', [
+        'period' => $period,
+        'startDate' => $startDate->format('Y-m-d'),
+        'endDate' => $endDate->format('Y-m-d'),
+        'totalSales' => $totalSales,
+        'totalProfit' => $totalProfit,
+        'totalServiceCharge' => $totalServiceCharge,
+        'totalTransactions' => $totalTransactions,
+        'averageTransaction' => $averageTransaction,
+        'paymentBreakdown' => $paymentBreakdown,
+        'topProducts' => $topProducts,
+    ]);
+}
+
 public function exportTransactions(Request $request)
 {
     $fileName = 'laporan-penjualan-'.now()->format('Y-m-d_His').'.xlsx';

@@ -5,7 +5,7 @@
 
         <!-- LEFT SIDE -->
         <div class="col-md-5 d-flex align-items-center justify-content-center"
-             style="background: #FFFBEB;">
+             style="background: #efefdd;">
 
             <div style="width: 70%;">
 
@@ -15,6 +15,12 @@
 
                 <form method="POST" action="{{ route('login') }}">
                     @csrf
+
+                    @if (session('error'))
+                        <div class="alert alert-danger py-2 mb-3 rounded-0" role="alert">
+                            {{ session('error') }}
+                        </div>
+                    @endif
 
                     <!-- EMAIL -->
                     <div class="mb-3">

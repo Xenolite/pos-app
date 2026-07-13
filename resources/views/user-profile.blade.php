@@ -29,9 +29,9 @@
             <button type="submit" class="theme-toggle">
 
                 @if(auth()->user()->dark_mode)
-                    ☀️ Light Mode
+                    <i class="bi bi-sun-fill mx-1"></i> Light Mode
                 @else
-                    🌙 Dark Mode
+                    <i class="bi bi-moon-fill mx-1"></i> Dark Mode
                 @endif
 
             </button>

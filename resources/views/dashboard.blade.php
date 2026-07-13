@@ -134,7 +134,7 @@
 
             <!-- PAY -->
             <button type="button"
-                    class="pay-trigger-btn"
+                    class="pay-trigger-btn bi bi-cash"
                     data-bs-toggle="modal"
                     data-bs-target="#paymentModal"
                     {{ empty($cart) ? 'disabled' : '' }}>
@@ -350,7 +350,7 @@
 
                         @if($product->stock > 0)
 
-                        <button class="add-btn"
+                        <button class="add-btn bi bi-cart-plus"
                                 data-bs-toggle="modal"
                                 data-bs-target="#cartModal{{ $product->id }}">
                             Add to Cart

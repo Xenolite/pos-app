@@ -91,8 +91,8 @@
 
             <!-- Upload New Image -->
             <div class="mb-3">
-                <label>Change Image</label>
-                <input type="file" name="image" class="form-control">
+                <label class="my-2">Change Image</label>
+                <input type="file" name="image" class="form-control" accept="image/png, image/jpeg">
             </div>
 
         </div>
@@ -100,10 +100,11 @@
     </div>
 
     <!-- ACTION BUTTONS -->
-    <div class="mt-3 d-flex justify-content-between">
-
+    <div class="my-3  d-flex justify-content-between">
+        
         <button class="btn btn-primary">
-            💾 Update Product
+            <i class="bi bi-floppy mx-1"></i>
+            Update Product
         </button>
 
        
@@ -134,7 +135,9 @@
 </form>
 @endif -->
 
-<a href="{{ route('products') }}" class="btn btn-secondary">Back</a>
+<a href="{{ route('products') }}" class="btn btn-secondary">
+    <i class="bi bi-arrow-return-left mx-1"></i>
+    Back</a>
 </div>
 
 @endsection

@@ -26,6 +26,8 @@ Route::middleware(['auth'])->group(function () {
     ->name('products');
     Route::get('/transactions', [POSController::class, 'transactions'])
     ->name('transactions');
+    Route::get('/transactions/summary', [POSController::class, 'transactionSummary'])
+    ->name('transactions.summary');
     Route::post('/orders/{orderId}/check-status', [POSController::class, 'checkOrderStatus'])
     ->name('orders.checkStatus');
     Route::get('/transactions/export', [POSController::class, 'exportTransactions'])
