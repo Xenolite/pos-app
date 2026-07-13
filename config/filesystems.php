@@ -60,6 +60,24 @@ return [
             'report' => false,
         ],
 
+        // Supabase Storage — S3-compatible object storage. Dipakai karena
+        // filesystem lokal Railway itu ephemeral (di-reset tiap redeploy),
+        // jadi gambar produk yang di-upload lewat disk 'public' biasa akan
+        // HILANG tiap kali aplikasi di-deploy ulang. Supabase Storage
+        // menyimpan file di luar container, jadi persist selamanya.
+        'supabase' => [
+            'driver' => 's3',
+            'key' => env('SUPABASE_STORAGE_KEY'),
+            'secret' => env('SUPABASE_STORAGE_SECRET'),
+            'region' => env('SUPABASE_STORAGE_REGION', 'us-east-1'),
+            'bucket' => env('SUPABASE_STORAGE_BUCKET'),
+            'url' => env('SUPABASE_STORAGE_URL'),
+            'endpoint' => env('SUPABASE_STORAGE_ENDPOINT'),
+            'use_path_style_endpoint' => true,
+            'throw' => false,
+            'report' => false,
+        ],
+
     ],
 
     /*

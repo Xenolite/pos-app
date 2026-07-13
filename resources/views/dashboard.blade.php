@@ -83,7 +83,7 @@
                         $lineTotal = $item['price'] * $item['quantity'];
                     @endphp
                     <tr>
-                        <td class="item-name-cell" title="{{ $item['name'] }}">{{ $item['name'] }}</td>
+                        <td title="{{ $item['name'] }}">{{ \Illuminate\Support\Str::limit($item['name'], 20) }}</td>
                         <td class="text-center">
                             <form action="{{ route('cart.updateQuantity', $id) }}"
                                   method="POST"
@@ -167,7 +167,7 @@
                                                 $lineTotal = $item['price'] * $item['quantity'];
                                             @endphp
                                             <tr>
-                                                <td class="item-name-cell" title="{{ $item['name'] }}">{{ $item['name'] }}</td>
+                                                <td title="{{ $item['name'] }}">{{ \Illuminate\Support\Str::limit($item['name'], 20) }}</td>
                                                 <td class="text-center">{{ $item['quantity'] }}x</td>
                                                 <td class="text-end">Rp {{ number_format($lineTotal) }}</td>
                                             </tr>
@@ -269,7 +269,7 @@
                                     </div>
 
                                     <!-- PAY FORM -->
-                                    <form action="/checkout" method="POST">
+                                    <form action="/checkout" method="POST" id="checkoutForm">
                                         @csrf
 
                                         <input type="hidden" name="service_charge" id="service_charge_hidden_modal">
@@ -280,7 +280,7 @@
                                                 Cancel
                                             </button>
 
-                                            <button type="submit" class="pay-button flex-grow-1">
+                                            <button type="submit" class="pay-button flex-grow-1" id="payButton">
                                                 Pay
                                             </button>
                                         </div>
@@ -311,7 +311,7 @@
                         <a href="{{ route('dashboard', ['category' => $cat, 'search' => request('search')]) }}"
                            class="category-btn {{ request('category') == $cat ? 'active' : '' }}"
                            title="{{ $cat }}">
-                            {{ $cat }}
+                            {{ \Illuminate\Support\Str::limit($cat, 18) }}
                         </a>
                     @endforeach
                 </div>
@@ -335,11 +335,11 @@
 
                 <div class="product-card">
 
-                    <img src="{{ asset('storage/'.$product->image) }}">
+                    <img src="{{ $product->image_url }}">
 
                     <div class="product-info">
 
-                        <h6 title="{{ $product->name }}">{{ $product->name }}</h6>
+                        <h6 title="{{ $product->name }}">{{ \Illuminate\Support\Str::limit($product->name, 18) }}</h6>
 
                         <p>
                             Rp {{ number_format($product->price) }}
@@ -358,7 +358,7 @@
 
                         @else
 
-                        <button class="add-btn disabled">
+                        <button class="add-btn-disabled disabled">
                             Out of Stock
                         </button>
 
@@ -378,7 +378,7 @@
                             <div class="modal-content">
 
                                 <div class="modal-header">
-                                    <h5 class="modal-title">{{ $product->name }}</h5>
+                                    <h5 class="modal-title" title="{{ $product->name }}">{{ \Illuminate\Support\Str::limit($product->name, 25) }}</h5>
                                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                 </div>
 
@@ -455,6 +455,67 @@ function selectPayment(method, button)
     document.getElementById('payment_method').value = method;
 }
 
+// CASH tetap submit form biasa (redirect langsung, transaksi lunas di kasir).
+// Metode lain (QRIS/Transfer/e-wallet/dst) dikirim via AJAX ke /checkout,
+// lalu Midtrans Snap dimunculkan sebagai popup pembayaran.
+document.getElementById('checkoutForm').addEventListener('submit', function (e) {
+
+    const method = document.getElementById('payment_method').value;
+
+    if (method === 'Cash') {
+        return; // biarkan submit form normal
+    }
+
+    e.preventDefault();
+
+    const form = this;
+    const payButton = document.getElementById('payButton');
+    payButton.disabled = true;
+    payButton.textContent = 'Processing...';
+
+    fetch(form.action, {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value,
+            'Accept': 'application/json',
+        },
+        body: new FormData(form),
+    })
+    .then(res => res.json())
+    .then(data => {
+
+        payButton.disabled = false;
+        payButton.textContent = 'Pay';
+
+        if (!data.snap_token) {
+            alert('Failed to start payment. Please try again.');
+            return;
+        }
+
+        snap.pay(data.snap_token, {
+            onSuccess: function () {
+                window.location.href = window.location.pathname;
+            },
+            onPending: function () {
+                alert('Payment is pending. The transaction will be confirmed once payment is completed.');
+                window.location.href = window.location.pathname;
+            },
+            onError: function () {
+                alert('Payment failed. Please try again.');
+            },
+            onClose: function () {
+                // Customer closed the Snap popup without finishing payment;
+                // transaction stays "pending" and stock is untouched.
+            }
+        });
+    })
+    .catch(() => {
+        payButton.disabled = false;
+        payButton.textContent = 'Pay';
+        alert('Something went wrong. Please try again.');
+    });
+});
+
 // Discount Value field should only be editable when a discount type
 // (Percentage/Fixed) is actually selected — keeps it disabled + zeroed
 // while "No Discount" is picked, so it can't be filled in for nothing.
@@ -523,7 +584,7 @@ document.addEventListener('DOMContentLoaded', syncServiceCharge);
     text-decoration: underline;
 }
 
-/* ORDER TABLE (used both in the main panel and the payment modal) */
+
 .order-table{
     width: 100%;
     border-collapse: collapse;
@@ -543,13 +604,6 @@ document.addEventListener('DOMContentLoaded', syncServiceCharge);
     padding: 10px 0;
     border-bottom: 1px solid #eee;
     font-size: 14px;
-}
-
-.item-name-cell{
-    max-width: 120px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
 }
 
 .qty-form{
@@ -606,16 +660,17 @@ document.addEventListener('DOMContentLoaded', syncServiceCharge);
     text-align: center;
 }
 
-.product-info h6{
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
 .add-btn{
     width: 100%;
     border: none;
     background: #F97316;
+    padding: 10px;
+    border-radius: 10px;
+}
+.add-btn-disabled{
+    width: 100%;
+    border: none;
+    background: #a8a6a4;
     padding: 10px;
     border-radius: 10px;
 }
@@ -652,10 +707,6 @@ document.addEventListener('DOMContentLoaded', syncServiceCharge);
     text-decoration: none;
     font-weight: 600;
     white-space: nowrap;
-    max-width: 160px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    display: inline-block;
 }
 
 .category-btn:hover{

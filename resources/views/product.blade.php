@@ -54,7 +54,7 @@
                class="category-item {{ $category == $cat ? 'active-category' : '' }}"
                title="{{ $cat }}">
 
-                {{ $cat }}
+                {{ \Illuminate\Support\Str::limit($cat, 18) }}
 
             </a>
 
@@ -96,7 +96,7 @@
                 <!-- IMAGE -->
                 <div class="product-image-wrapper">
 
-                    <img src="{{ asset('storage/' . $product->image) }}"
+                    <img src="{{ $product->image_url }}"
                          class="product-image">
 
                     @if($product->stock <= 5)
@@ -113,11 +113,11 @@
                 <div class="product-info">
 
                     <h5 class="product-name" title="{{ $product->name }}">
-                        {{ $product->name }}
+                        {{ \Illuminate\Support\Str::limit($product->name, 20) }}
                     </h5>
 
                     <div class="product-category" title="{{ $product->category }}">
-                        {{ $product->category }}
+                        {{ \Illuminate\Support\Str::limit($product->category, 15) }}
                     </div>
 
                     <div class="product-price">
@@ -172,18 +172,17 @@
 
                         </form>
 
-                        <!-- PERMANENT DELETE (hanya untuk produk yang sudah nonaktif,
-                             biar nggak kepencet nggak sengaja waktu produk masih dipakai) -->
+                        <!--  PERMANENT DELETE  -->
                         <form action="{{ route('products.forceDelete', $product->id) }}"
                               method="POST"
                               class="w-100"
-                              onsubmit="return confirm('Hapus produk ini secara PERMANEN? Tindakan ini tidak bisa dibatalkan.');">
+                              onsubmit="return confirm('DELETE The Product PERMANENTLY? This Action Cannot be Undone.');">
 
                             @csrf
                             @method('DELETE')
 
                             <button class="btn-delete-permanent w-100">
-                                Delete Permanently
+                                Delete
                             </button>
 
                         </form>
@@ -239,9 +238,6 @@
     color: #444;
     transition: .2s;
     font-weight: 500;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
 }
 
 .category-item:hover{
@@ -348,18 +344,12 @@
 .product-name{
     font-weight: 700;
     margin-bottom: 8px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
 }
 
 .product-category{
     color: #999;
     margin-bottom: 10px;
     font-size: 14px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
 }
 
 .product-price{

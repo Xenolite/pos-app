@@ -46,8 +46,8 @@
         <img src="https://ui-avatars.com/api/?name={{ auth()->user()->name }}"
              class="profile-image">
 
-        <h3 class="mt-3">
-            {{ auth()->user()->name }}
+        <h3 class="mt-3 profile-name" title="{{ auth()->user()->name }}">
+            {{ \Illuminate\Support\Str::limit(auth()->user()->name, 20) }}
         </h3>
 
         <div class="text-muted">
@@ -266,6 +266,13 @@
     width: 120px;
     height: 120px;
     border-radius: 50%;
+}
+
+.profile-name{
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
 }
 
 .info-row{

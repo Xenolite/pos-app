@@ -178,8 +178,8 @@
                         {{ $transaction->created_at->format('d M Y H:i') }}
                     </td>
 
-                    <td>
-                        {{ $transaction->user->name ?? '-' }}
+                    <td title="{{ $transaction->user->name ?? '-' }}">
+                        {{ \Illuminate\Support\Str::limit($transaction->user->name ?? '-', 15) }}
                     </td>
 
                     <td class="text-success fw-bold">
@@ -284,7 +284,7 @@
 
                         <div class="d-flex justify-content-between mb-1">
                             <span class="text-muted">Cashier</span>
-                            <span>{{ $transaction->user->name ?? '-' }}</span>
+                            <span title="{{ $transaction->user->name ?? '-' }}">{{ \Illuminate\Support\Str::limit($transaction->user->name ?? '-', 20) }}</span>
                         </div>
 
                         <div class="d-flex justify-content-between mb-1">
@@ -317,7 +317,7 @@
                                 $itemsSubtotal += $lineTotal;
                             @endphp
                             <tr>
-                                <td>{{ $item->product->name ?? 'Deleted Product' }}</td>
+                                <td title="{{ $item->product->name ?? 'Deleted Product' }}">{{ \Illuminate\Support\Str::limit($item->product->name ?? 'Deleted Product', 20) }}</td>
                                 <td class="text-center">{{ $item->quantity }}x</td>
                                 <td class="text-end">Rp {{ number_format($item->price) }}</td>
                                 <td class="text-end">Rp {{ number_format($lineTotal) }}</td>

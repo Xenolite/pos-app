@@ -58,6 +58,15 @@
             gap: 15px;
         }
 
+        .navbar-username{
+            max-width: 160px;
+            display: inline-block;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            vertical-align: middle;
+        }
+
         .main-content{
             padding: 30px;
         }
@@ -110,8 +119,8 @@
         <div class="user-section">
 
             <div>
-                <a href="{{ route('profile.page') }}">
-                👤 {{ auth()->user()->name }}
+                <a href="{{ route('profile.page') }}" class="navbar-username" title="{{ auth()->user()->name }}">
+                👤 {{ \Illuminate\Support\Str::limit(auth()->user()->name, 15) }}
             </a>
             </div>
 

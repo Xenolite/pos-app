@@ -70,7 +70,7 @@
 
                     <tr>
 
-                        <td>{{ $user->name }}</td>
+                        <td title="{{ $user->name }}">{{ \Illuminate\Support\Str::limit($user->name, 20) }}</td>
 
                         <td>
                             {{ ucfirst($user->role) }}

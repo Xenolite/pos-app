@@ -84,7 +84,7 @@
 
             <!-- Current Image -->
             @if($product->image)
-                <img src="{{ asset('storage/'.$product->image) }}" 
+                <img src="{{ $product->image_url }}" 
                      class="img-fluid mb-3" 
                      style="max-height: 200px;">
             @endif

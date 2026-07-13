@@ -26,10 +26,18 @@ class ProductController extends Controller
         'image' => 'image|mimes:jpg,png,jpeg|max:2048'
     ]);
 
-    // Upload image
+    // Upload image ke Supabase Storage (bukan disk lokal), supaya file
+    // tetap ada meskipun aplikasi di-redeploy di Railway.
+    //
+    // PENTING: folder di sini ("uploads") sengaja BEDA dari nama bucket
+    // ("products", lihat SUPABASE_STORAGE_BUCKET / SUPABASE_STORAGE_URL
+    // di .env). Kalau nama folder di sini sama persis dengan nama bucket,
+    // URL publik yang di-generate Product::image_url akan double
+    // (.../public/products/products/nama-file.jpg) karena nama bucket
+    // sudah ada di SUPABASE_STORAGE_URL, jadi jangan diulang lagi di sini.
     $imagePath = null;
     if ($request->hasFile('image')) {
-        $imagePath = $request->file('image')->store('products', 'public');
+        $imagePath = $request->file('image')->store('uploads', 'supabase');
     }
 
     Product::create([
@@ -79,9 +87,9 @@ public function update(Request $request, $id)
 
     if ($request->hasFile('image')) {
         if ($product->image) {
-            Storage::delete('public/' . $product->image);
+            Storage::disk('supabase')->delete($product->image);
         }
-        $data['image'] = $request->file('image')->store('products', 'public');
+        $data['image'] = $request->file('image')->store('uploads', 'supabase');
     }
 
     $product->update($data);
@@ -130,7 +138,7 @@ public function forceDelete($id)
 
     try {
         if ($product->image) {
-            Storage::delete('public/'.$product->image);
+            Storage::disk('supabase')->delete($product->image);
         }
 
         $product->delete();

@@ -132,10 +132,10 @@
 
         <div class="mini-product-card">
 
-            <img src="{{ asset('storage/' . ($item->product->image ?? 'default.png')) }}">
+            <img src="{{ $item->product->image_url ?? asset('images/no-image.png') }}">
 
-            <h6 class="mt-2">
-                {{ $item->product->name ?? 'Deleted Product' }}
+            <h6 class="mt-2" title="{{ $item->product->name ?? 'Deleted Product' }}">
+                {{ \Illuminate\Support\Str::limit($item->product->name ?? 'Deleted Product', 15) }}
             </h6>
 
             <small class="text-muted">
@@ -247,8 +247,8 @@
 
         <div>
 
-            <div class="fw-bold">
-                {{ $user->name }}
+            <div class="fw-bold" title="{{ $user->name }}">
+                {{ \Illuminate\Support\Str::limit($user->name, 15) }}
             </div>
 
             <small class="text-muted">
@@ -398,11 +398,21 @@
     gap: 15px;
 }
 
+.mini-product-card{
+    width: 100px;
+}
+
 .mini-product-card img{
     width: 100px;
     height: 70px;
     object-fit: cover;
     border-radius: 12px;
+}
+
+.mini-product-card h6{
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .low-stock{
