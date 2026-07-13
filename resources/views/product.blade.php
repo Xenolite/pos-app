@@ -51,7 +51,8 @@
             @foreach($categories as $cat)
 
             <a href="{{ route('products', ['category' => $cat]) }}"
-               class="category-item {{ $category == $cat ? 'active-category' : '' }}">
+               class="category-item {{ $category == $cat ? 'active-category' : '' }}"
+               title="{{ $cat }}">
 
                 {{ $cat }}
 
@@ -111,11 +112,11 @@
                 <!-- CONTENT -->
                 <div class="product-info">
 
-                    <h5 class="product-name">
+                    <h5 class="product-name" title="{{ $product->name }}">
                         {{ $product->name }}
                     </h5>
 
-                    <div class="product-category">
+                    <div class="product-category" title="{{ $product->category }}">
                         {{ $product->category }}
                     </div>
 
@@ -171,17 +172,18 @@
 
                         </form>
 
-                        <!--  PERMANENT DELETE  -->
+                        <!-- PERMANENT DELETE (hanya untuk produk yang sudah nonaktif,
+                             biar nggak kepencet nggak sengaja waktu produk masih dipakai) -->
                         <form action="{{ route('products.forceDelete', $product->id) }}"
                               method="POST"
                               class="w-100"
-                              onsubmit="return confirm('DELETE The Product PERMANENTLY? This Action Cannot be Undone.');">
+                              onsubmit="return confirm('Hapus produk ini secara PERMANEN? Tindakan ini tidak bisa dibatalkan.');">
 
                             @csrf
                             @method('DELETE')
 
                             <button class="btn-delete-permanent w-100">
-                                Delete
+                                Delete Permanently
                             </button>
 
                         </form>
@@ -237,6 +239,9 @@
     color: #444;
     transition: .2s;
     font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .category-item:hover{
@@ -343,12 +348,18 @@
 .product-name{
     font-weight: 700;
     margin-bottom: 8px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .product-category{
     color: #999;
     margin-bottom: 10px;
     font-size: 14px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .product-price{
