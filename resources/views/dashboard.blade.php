@@ -501,11 +501,19 @@ document.getElementById('checkoutForm').addEventListener('submit', function (e) 
                 window.location.href = window.location.pathname;
             },
             onError: function () {
+                // Sync with Midtrans in case the transaction actually has a
+                // final status server-side, instead of leaving it stuck as
+                // "pending" forever in our database.
+                syncTransactionStatus(data.transaction_id);
                 alert('Payment failed. Please try again.');
             },
             onClose: function () {
-                // Customer closed the Snap popup without finishing payment;
-                // transaction stays "pending" and stock is untouched.
+                // Customer closed the Snap popup without finishing payment.
+                // The underlying payment (e.g. a VA number) may still be valid,
+                // so we ask Midtrans for the real status rather than assuming
+                // it failed -- this keeps the transaction from being stuck as
+                // "pending" forever if it was actually cancelled/expired/paid.
+                syncTransactionStatus(data.transaction_id);
             }
         });
     })
@@ -515,6 +523,24 @@ document.getElementById('checkoutForm').addEventListener('submit', function (e) 
         alert('Something went wrong. Please try again.');
     });
 });
+
+// Panggil endpoint "cek status" supaya transaksi non-cash yang popup Snap-nya
+// ditutup/error langsung disinkronkan ke status asli di Midtrans, alih-alih
+// diam-diam nyangkut "pending" selamanya menunggu webhook yang belum tentu datang.
+function syncTransactionStatus(transactionId) {
+    if (!transactionId) return;
+
+    fetch(`/transactions/${transactionId}/check-status`, {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value,
+            'Accept': 'application/json',
+        },
+    }).catch(() => {
+        // Silent fail -- status can still be checked manually later from the
+        // Transaction History page.
+    });
+}
 
 // Discount Value field should only be editable when a discount type
 // (Percentage/Fixed) is actually selected — keeps it disabled + zeroed

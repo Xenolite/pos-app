@@ -284,6 +284,18 @@
     border-color: #F97316;
     box-shadow: none;
 }
+
+.dark-mode .qty-input{
+    background: #6a6a6a;
+    border: 1px solid #7a7a7a;
+    color: white;
+}
+
+.dark-mode .qty-input:focus{
+    background: #6a6a6a;
+    color: white;
+    border-color: #F97316;
+}
 .dark-mode .category-item{
     display: block;
     padding: 14px 18px;

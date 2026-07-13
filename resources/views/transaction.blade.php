@@ -2,6 +2,32 @@
 
 @section('content')
 
+@if(session('success'))
+<div class="alert alert-success alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3"
+     style="z-index: 9999;" role="alert">
+    {{ session('success') }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+<script>
+    setTimeout(() => {
+        document.querySelector('.alert')?.remove();
+    }, 3000);
+</script>
+@endif
+
+@if(session('error'))
+<div class="alert alert-danger alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3"
+     style="z-index: 9999;" role="alert">
+    {{ session('error') }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+<script>
+    setTimeout(() => {
+        document.querySelector('.alert')?.remove();
+    }, 3000);
+</script>
+@endif
+
 <div class="transactions-page">
 
     <!-- HEADER -->
@@ -219,6 +245,19 @@
                             View
 
                         </button>
+
+                        @if($transaction->payment_status === 'pending' && $transaction->midtrans_order_id)
+
+                        <form action="{{ route('transactions.checkStatus', $transaction->id) }}"
+                              method="POST"
+                              style="display: inline-block; margin-left: 6px;">
+                            @csrf
+                            <button type="submit" class="view-btn" style="background:#F97316;">
+                                Cek Status
+                            </button>
+                        </form>
+
+                        @endif
 
                     </td>
 

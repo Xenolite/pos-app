@@ -5,6 +5,7 @@ namespace App\Services;
 use Midtrans\Config;
 use Midtrans\Notification;
 use Midtrans\Snap;
+use Midtrans\Transaction as MidtransTransaction;
 
 class MidtransService
 {
@@ -50,5 +51,20 @@ class MidtransService
     public function handleNotification(): Notification
     {
         return new Notification();
+    }
+
+    /**
+     * Tanya langsung status transaksi ke server Midtrans (dipakai untuk
+     * "Cek Status" manual). Berguna kalau webhook tidak pernah sampai --
+     * misalnya customer menutup popup Snap, koneksi putus, atau notification
+     * URL sempat tidak bisa diakses -- sehingga transaksi lokal nyangkut di
+     * status "pending" selamanya walau di sisi Midtrans sudah final
+     * (settlement/expire/cancel/deny).
+     *
+     * @return array  hasil status dalam bentuk array asosiatif
+     */
+    public function getStatus(string $orderId): array
+    {
+        return (array) MidtransTransaction::status($orderId);
     }
 }

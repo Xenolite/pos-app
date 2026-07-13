@@ -275,15 +275,67 @@ public function midtransNotification(\App\Services\MidtransService $midtrans)
         return response()->json(['message' => 'Transaction not found'], 404);
     }
 
-    // Hindari memproses dua kali kalau notifikasi sama dikirim ulang oleh Midtrans.
+    $this->applyMidtransStatus($transaction, $status, $fraud, $notification->payment_type ?? null);
+
+    return response()->json(['message' => 'OK']);
+}
+
+/**
+ * "Cek Status" manual -- dipanggil dari halaman riwayat transaksi (atau
+ * otomatis saat popup Snap ditutup/error) supaya transaksi non-cash yang
+ * nyangkut "pending" bisa disinkronkan langsung ke status asli di Midtrans,
+ * tanpa harus menunggu webhook yang mungkin tidak pernah sampai.
+ */
+public function checkTransactionStatus($id, \App\Services\MidtransService $midtrans)
+{
+    $transaction = Transaction::findOrFail($id);
+
+    // Transaksi Cash atau yang belum pernah dikirim ke Midtrans tidak punya
+    // apa pun untuk dicek.
+    if (! $transaction->midtrans_order_id) {
+        return back()->with('error', 'Transaction has no payment gateway record to check.');
+    }
+
+    // Sudah final di sisi lokal, tidak perlu tanya ulang ke Midtrans.
+    if (in_array($transaction->payment_status, ['paid', 'failed', 'expired'])) {
+        return back()->with('success', 'Transaction status is already final: '.$transaction->payment_status);
+    }
+
+    try {
+        $result = $midtrans->getStatus($transaction->midtrans_order_id);
+    } catch (\Exception $e) {
+        return back()->with('error', 'Could not reach Midtrans to check status. Please try again later.');
+    }
+
+    $status = $result['transaction_status'] ?? null;
+    $fraud = $result['fraud_status'] ?? null;
+    $paymentType = $result['payment_type'] ?? null;
+
+    if (! $status) {
+        return back()->with('error', 'Midtrans did not return a status for this transaction.');
+    }
+
+    $this->applyMidtransStatus($transaction, $status, $fraud, $paymentType);
+
+    return back()->with('success', 'Status updated: '.$transaction->fresh()->payment_status);
+}
+
+/**
+ * Terapkan status Midtrans (dari webhook ATAU dari pengecekan manual) ke
+ * transaksi lokal. Disatukan di sini supaya kedua jalur selalu konsisten.
+ */
+private function applyMidtransStatus(Transaction $transaction, ?string $status, ?string $fraud, ?string $paymentType = null): void
+{
+    // Hindari memproses dua kali kalau notifikasi sama dikirim ulang oleh Midtrans,
+    // atau kalau "Cek Status" dipanggil setelah transaksi sudah lunas.
     if ($transaction->payment_status === 'paid') {
-        return response()->json(['message' => 'Already processed']);
+        return;
     }
 
     if ($status === 'capture' && $fraud === 'accept') {
-        $this->markTransactionPaid($transaction, $notification);
+        $this->markTransactionPaid($transaction, $paymentType);
     } elseif ($status === 'settlement') {
-        $this->markTransactionPaid($transaction, $notification);
+        $this->markTransactionPaid($transaction, $paymentType);
     } elseif (in_array($status, ['cancel', 'deny'])) {
         $transaction->update(['payment_status' => 'failed']);
     } elseif ($status === 'expire') {
@@ -291,15 +343,13 @@ public function midtransNotification(\App\Services\MidtransService $midtrans)
     } elseif ($status === 'pending') {
         $transaction->update(['payment_status' => 'pending']);
     }
-
-    return response()->json(['message' => 'OK']);
 }
 
-private function markTransactionPaid(Transaction $transaction, $notification)
+private function markTransactionPaid(Transaction $transaction, ?string $paymentType = null)
 {
     $transaction->update([
         'payment_status' => 'paid',
-        'payment_type' => $notification->payment_type ?? null,
+        'payment_type' => $paymentType,
         'paid_at' => now(),
     ]);
 
