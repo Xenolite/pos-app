@@ -235,8 +235,8 @@
                             // Hanya ada dua status yang tercatat: "paid" (Berhasil)
                             // dan "failed" (Gagal). Tidak ada lagi "pending"/"expired".
                             $statusLabels = [
-                                'paid' => 'Berhasil',
-                                'failed' => 'Gagal',
+                                'paid' => 'Success',
+                                'failed' => 'Failed',
                             ];
                             $statusColors = [
                                 'paid' => '#198754',
