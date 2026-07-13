@@ -12,10 +12,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('transactions', function (Blueprint $table) {
-            // pending  : transaksi non-cash yang sudah dibuat tapi belum dibayar (menunggu Snap)
             // paid     : sudah dibayar (cash langsung dianggap paid, non-cash dari webhook Midtrans)
-            // failed   : ditolak/deny oleh Midtrans
-            // expired  : expired / dibatalkan sebelum dibayar
+            // failed   : gagal/ditolak/dibatalkan/expired di Midtrans
+            // (tidak ada status "pending" -- baris transaksi non-cash baru dibuat
+            // setelah hasilnya final, lihat POSController::finalizeMidtransOrder())
             $table->string('payment_status')->default('paid')->after('payment_method');
 
             // Order ID unik yang dikirim ke Midtrans (harus unik per transaksi, beda dari id auto-increment)

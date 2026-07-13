@@ -224,16 +224,21 @@
                     </td>
                     <td>
                         @php
+                            // Hanya ada dua status yang tercatat: "paid" (Berhasil)
+                            // dan "failed" (Gagal). Tidak ada lagi "pending"/"expired".
+                            $statusLabels = [
+                                'paid' => 'Berhasil',
+                                'failed' => 'Gagal',
+                            ];
                             $statusColors = [
                                 'paid' => '#198754',
-                                'pending' => '#F97316',
                                 'failed' => '#dc3545',
-                                'expired' => '#6c757d',
                             ];
+                            $statusLabel = $statusLabels[$transaction->payment_status] ?? ucfirst($transaction->payment_status);
                             $statusColor = $statusColors[$transaction->payment_status] ?? '#6c757d';
                         @endphp
-                        <span style="color: {{ $statusColor }}; font-weight: 600; text-transform: capitalize;">
-                            {{ $transaction->payment_status }}
+                        <span style="color: {{ $statusColor }}; font-weight: 600;">
+                            {{ $statusLabel }}
                         </span>
                     </td>
                     <td>
@@ -245,19 +250,6 @@
                             View
 
                         </button>
-
-                        @if($transaction->payment_status === 'pending' && $transaction->midtrans_order_id)
-
-                        <form action="{{ route('transactions.checkStatus', $transaction->id) }}"
-                              method="POST"
-                              style="display: inline-block; margin-left: 6px;">
-                            @csrf
-                            <button type="submit" class="view-btn" style="background:#F97316;">
-                                Cek Status
-                            </button>
-                        </form>
-
-                        @endif
 
                     </td>
 

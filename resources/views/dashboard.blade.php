@@ -497,23 +497,22 @@ document.getElementById('checkoutForm').addEventListener('submit', function (e) 
                 window.location.href = window.location.pathname;
             },
             onPending: function () {
-                alert('Payment is pending. The transaction will be confirmed once payment is completed.');
+                alert('Please complete your payment. The transaction will be recorded once payment is confirmed.');
                 window.location.href = window.location.pathname;
             },
             onError: function () {
                 // Sync with Midtrans in case the transaction actually has a
-                // final status server-side, instead of leaving it stuck as
-                // "pending" forever in our database.
-                syncTransactionStatus(data.transaction_id);
+                // final status server-side, instead of leaving it unrecorded.
+                syncTransactionStatus(data.order_id);
                 alert('Payment failed. Please try again.');
             },
             onClose: function () {
                 // Customer closed the Snap popup without finishing payment.
                 // The underlying payment (e.g. a VA number) may still be valid,
                 // so we ask Midtrans for the real status rather than assuming
-                // it failed -- this keeps the transaction from being stuck as
-                // "pending" forever if it was actually cancelled/expired/paid.
-                syncTransactionStatus(data.transaction_id);
+                // it failed -- a transaction is only recorded once the result
+                // is final: paid (berhasil) or failed (gagal).
+                syncTransactionStatus(data.order_id);
             }
         });
     })
@@ -524,21 +523,22 @@ document.getElementById('checkoutForm').addEventListener('submit', function (e) 
     });
 });
 
-// Panggil endpoint "cek status" supaya transaksi non-cash yang popup Snap-nya
-// ditutup/error langsung disinkronkan ke status asli di Midtrans, alih-alih
-// diam-diam nyangkut "pending" selamanya menunggu webhook yang belum tentu datang.
-function syncTransactionStatus(transactionId) {
-    if (!transactionId) return;
+// Panggil endpoint "cek status" supaya order non-cash yang popup Snap-nya
+// ditutup/error langsung disinkronkan ke status asli di Midtrans. Order
+// hanya akan tercatat di riwayat transaksi kalau hasilnya sudah final:
+// berhasil (paid) atau gagal (failed) -- tidak pernah ada status "pending".
+function syncTransactionStatus(orderId) {
+    if (!orderId) return;
 
-    fetch(`/transactions/${transactionId}/check-status`, {
+    fetch(`/orders/${orderId}/check-status`, {
         method: 'POST',
         headers: {
             'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value,
             'Accept': 'application/json',
         },
     }).catch(() => {
-        // Silent fail -- status can still be checked manually later from the
-        // Transaction History page.
+        // Silent fail -- if this happens, Midtrans's own webhook (or the next
+        // time this order is checked) will still resolve it eventually.
     });
 }
 

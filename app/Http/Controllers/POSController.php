@@ -189,32 +189,27 @@ class POSController extends Controller
     }
 
     // NON-CASH (QRIS, Transfer, e-wallet, dst) = dibayar via Midtrans Snap.
-    // Transaksi dibuat dengan status "pending" dulu, stok BELUM dipotong
-    // sampai pembayaran benar-benar sukses (dikonfirmasi lewat webhook).
-    $transaction = Transaction::create([
+    // TIDAK ADA baris transaksi yang dibuat di sini. Detail order (cart,
+    // total, dst) disimpan sementara di cache (bukan tabel transactions)
+    // selama menunggu hasil akhir dari Midtrans. Baris transaksi baru
+    // benar-benar dibuat begitu hasilnya final -- "paid" (Berhasil) atau
+    // "failed" (Gagal) -- lewat finalizeMidtransOrder(). Jadi tidak pernah
+    // ada status "pending" yang tercatat di riwayat transaksi.
+    $orderId = 'POS-'.now()->timestamp.'-'.\Illuminate\Support\Str::random(8);
+
+    \Illuminate\Support\Facades\Cache::put("midtrans_order:{$orderId}", [
         'user_id' => auth()->id(),
+        'cart' => $cart,
         'total' => $total,
         'profit' => $totalProfit,
         'service_charge' => $serviceCharge,
         'payment_method' => $paymentMethod,
-        'payment_status' => 'pending',
-    ]);
-
-    // Simpan item pesanan LANGSUNG ke database (bukan session) supaya bisa
-    // dibaca lagi saat webhook Midtrans masuk. Webhook adalah request
-    // server-to-server dari Midtrans, jadi TIDAK membawa session cookie
-    // milik kasir/customer -- data yang disimpan di session tidak akan bisa
-    // diakses dari situ. Stok belum dipotong di sini, baru dipotong di
-    // markTransactionPaid() begitu pembayaran dikonfirmasi sukses.
-    $this->saveTransactionItems($transaction, $cart);
+    ], now()->addHours(24));
 
     // Cart langsung dikosongkan begitu order dibuat (bukan menunggu pembayaran
     // selesai) -- sama seperti alur Cash, supaya panel cart di dashboard tidak
-    // menampilkan item yang sudah "dipesan". Kalau customer batal bayar,
-    // transaksi ini tetap tercatat di riwayat dengan status pending/expired/failed.
+    // menampilkan item yang sudah "dipesan".
     session()->forget('cart');
-
-    $orderId = 'POS-'.$transaction->id.'-'.time();
 
     $itemDetails = [];
     foreach ($cart as $id => $item) {
@@ -245,14 +240,9 @@ class POSController extends Controller
         ]
     );
 
-    $transaction->update([
-        'midtrans_order_id' => $orderId,
-        'snap_token' => $snapToken,
-    ]);
-
     return response()->json([
         'snap_token' => $snapToken,
-        'transaction_id' => $transaction->id,
+        'order_id' => $orderId,
     ]);
 }
 
@@ -265,104 +255,104 @@ public function midtransNotification(\App\Services\MidtransService $midtrans)
 {
     $notification = $midtrans->handleNotification();
 
-    $orderId = $notification->order_id;
-    $status = $notification->transaction_status;
-    $fraud = $notification->fraud_status;
-
-    $transaction = Transaction::where('midtrans_order_id', $orderId)->first();
-
-    if (! $transaction) {
-        return response()->json(['message' => 'Transaction not found'], 404);
-    }
-
-    $this->applyMidtransStatus($transaction, $status, $fraud, $notification->payment_type ?? null);
+    $this->finalizeMidtransOrder(
+        $notification->order_id,
+        $notification->transaction_status,
+        $notification->fraud_status,
+        $notification->payment_type ?? null
+    );
 
     return response()->json(['message' => 'OK']);
 }
 
 /**
- * "Cek Status" manual -- dipanggil dari halaman riwayat transaksi (atau
- * otomatis saat popup Snap ditutup/error) supaya transaksi non-cash yang
- * nyangkut "pending" bisa disinkronkan langsung ke status asli di Midtrans,
- * tanpa harus menunggu webhook yang mungkin tidak pernah sampai.
+ * "Cek Status" otomatis -- dipanggil dari frontend saat popup Snap
+ * ditutup/error, supaya order yang belum dapat webhook langsung
+ * disinkronkan ke status asli di Midtrans tanpa harus menunggu.
  */
-public function checkTransactionStatus($id, \App\Services\MidtransService $midtrans)
+public function checkOrderStatus($orderId, \App\Services\MidtransService $midtrans)
 {
-    $transaction = Transaction::findOrFail($id);
-
-    // Transaksi Cash atau yang belum pernah dikirim ke Midtrans tidak punya
-    // apa pun untuk dicek.
-    if (! $transaction->midtrans_order_id) {
-        return back()->with('error', 'Transaction has no payment gateway record to check.');
-    }
-
-    // Sudah final di sisi lokal, tidak perlu tanya ulang ke Midtrans.
-    if (in_array($transaction->payment_status, ['paid', 'failed', 'expired'])) {
-        return back()->with('success', 'Transaction status is already final: '.$transaction->payment_status);
+    // Sudah final (baris transaksi sudah dibuat) -- tidak perlu tanya ulang.
+    if (Transaction::where('midtrans_order_id', $orderId)->exists()) {
+        return response()->json(['message' => 'Already finalized']);
     }
 
     try {
-        $result = $midtrans->getStatus($transaction->midtrans_order_id);
+        $result = $midtrans->getStatus($orderId);
     } catch (\Exception $e) {
-        return back()->with('error', 'Could not reach Midtrans to check status. Please try again later.');
+        return response()->json(['message' => 'Could not reach Midtrans'], 502);
     }
 
-    $status = $result['transaction_status'] ?? null;
-    $fraud = $result['fraud_status'] ?? null;
-    $paymentType = $result['payment_type'] ?? null;
+    $this->finalizeMidtransOrder(
+        $orderId,
+        $result['transaction_status'] ?? null,
+        $result['fraud_status'] ?? null,
+        $result['payment_type'] ?? null
+    );
 
-    if (! $status) {
-        return back()->with('error', 'Midtrans did not return a status for this transaction.');
-    }
-
-    $this->applyMidtransStatus($transaction, $status, $fraud, $paymentType);
-
-    return back()->with('success', 'Status updated: '.$transaction->fresh()->payment_status);
+    return response()->json(['message' => 'Checked']);
 }
 
 /**
- * Terapkan status Midtrans (dari webhook ATAU dari pengecekan manual) ke
- * transaksi lokal. Disatukan di sini supaya kedua jalur selalu konsisten.
+ * Ubah order yang tersimpan di cache menjadi baris transaksi final --
+ * HANYA kalau hasilnya sudah pasti "berhasil" (paid) atau "gagal" (failed).
+ * Kalau status dari Midtrans masih benar-benar "pending" (mis. menunggu
+ * customer transfer/scan QRIS), tidak ada apa pun yang dicatat -- order
+ * tetap menunggu di cache sampai ada notifikasi berikutnya yang final.
+ * Dipakai bersama oleh webhook dan endpoint "cek status" manual supaya
+ * kedua jalur selalu konsisten.
  */
-private function applyMidtransStatus(Transaction $transaction, ?string $status, ?string $fraud, ?string $paymentType = null): void
+private function finalizeMidtransOrder(?string $orderId, ?string $status, ?string $fraud, ?string $paymentType = null): void
 {
-    // Hindari memproses dua kali kalau notifikasi sama dikirim ulang oleh Midtrans,
-    // atau kalau "Cek Status" dipanggil setelah transaksi sudah lunas.
-    if ($transaction->payment_status === 'paid') {
+    if (! $orderId) {
         return;
     }
 
-    if ($status === 'capture' && $fraud === 'accept') {
-        $this->markTransactionPaid($transaction, $paymentType);
-    } elseif ($status === 'settlement') {
-        $this->markTransactionPaid($transaction, $paymentType);
-    } elseif (in_array($status, ['cancel', 'deny'])) {
-        $transaction->update(['payment_status' => 'failed']);
-    } elseif ($status === 'expire') {
-        $transaction->update(['payment_status' => 'expired']);
-    } elseif ($status === 'pending') {
-        $transaction->update(['payment_status' => 'pending']);
+    // Sudah pernah difinalisasi sebelumnya (mis. webhook dikirim ulang oleh
+    // Midtrans, atau notifikasi lain untuk order yang sama menyusul).
+    if (Transaction::where('midtrans_order_id', $orderId)->exists()) {
+        return;
     }
-}
 
-private function markTransactionPaid(Transaction $transaction, ?string $paymentType = null)
-{
-    $transaction->update([
-        'payment_status' => 'paid',
+    $cacheKey = "midtrans_order:{$orderId}";
+    $order = \Illuminate\Support\Facades\Cache::get($cacheKey);
+
+    if (! $order) {
+        // Order tidak ditemukan (sudah kedaluwarsa di cache, atau order_id
+        // tidak valid) -- tidak ada apa pun yang bisa difinalisasi.
+        return;
+    }
+
+    $isSuccess = ($status === 'settlement') || ($status === 'capture' && $fraud === 'accept');
+    $isFinalFailure = in_array($status, ['cancel', 'deny', 'expire']);
+
+    if (! $isSuccess && ! $isFinalFailure) {
+        // Masih pending beneran -- jangan catat apa pun dulu, tunggu
+        // notifikasi berikutnya yang final.
+        return;
+    }
+
+    $transaction = Transaction::create([
+        'user_id' => $order['user_id'],
+        'total' => $order['total'],
+        'profit' => $order['profit'],
+        'service_charge' => $order['service_charge'],
+        'payment_method' => $order['payment_method'],
+        'payment_status' => $isSuccess ? 'paid' : 'failed',
         'payment_type' => $paymentType,
-        'paid_at' => now(),
+        'midtrans_order_id' => $orderId,
+        'paid_at' => $isSuccess ? now() : null,
     ]);
 
-    // Item sudah tersimpan sejak checkout(), di sini tinggal potong stoknya.
-    foreach ($transaction->items as $item) {
-
-        $product = $item->product;
-
-        if ($product && $product->stock >= $item->quantity) {
-            $product->stock -= $item->quantity;
-            $product->save();
-        }
+    if ($isSuccess) {
+        // Berhasil -> potong stok & catat item.
+        $this->deductStockAndSaveItems($transaction, $order['cart']);
+    } else {
+        // Gagal -> tetap catat item untuk riwayat, stok TIDAK dipotong.
+        $this->saveTransactionItems($transaction, $order['cart']);
     }
+
+    \Illuminate\Support\Facades\Cache::forget($cacheKey);
 }
 
 private function deductStockAndSaveItems(Transaction $transaction, array $cart)
@@ -390,8 +380,7 @@ private function deductStockAndSaveItems(Transaction $transaction, array $cart)
 
 /**
  * Simpan item transaksi TANPA memotong stok -- dipakai untuk transaksi
- * non-cash yang masih berstatus "pending" menunggu konfirmasi webhook.
- * Stok baru dipotong belakangan di markTransactionPaid().
+ * non-cash yang berakhir "failed" (gagal/dibatalkan/expired di Midtrans).
  */
 private function saveTransactionItems(Transaction $transaction, array $cart)
 {
