@@ -47,7 +47,7 @@
              class="profile-image">
 
         <h3 class="mt-3 profile-name" title="{{ auth()->user()->name }}">
-            {{ \Illuminate\Support\Str::limit(auth()->user()->name, 20) }}
+            {{ \Illuminate\Support\Str::limit(auth()->user()->name, 40) }}
         </h3>
 
         <div class="text-muted">
