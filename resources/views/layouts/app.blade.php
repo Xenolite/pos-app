@@ -125,10 +125,10 @@
         <div class="user-section">
 
             <div>
-                <i class="mx-2 bi bi-person-square "></i>
-                <a href="{{ route('profile.page') }}" class="navbar-username" title="{{ auth()->user()->name }}">
+                
+                <a href="{{ route('profile.page') }}" class="navbar-username bi bi-person-square" title="{{ auth()->user()->name }}">
                 {{ \Illuminate\Support\Str::limit(auth()->user()->name, 15) }}
-            </a>
+                </a>
             </div>
 
             <form method="POST" action="{{ route('logout') }}">

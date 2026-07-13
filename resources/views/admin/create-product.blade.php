@@ -32,12 +32,12 @@
 
 <div class="mb-3">
     <label>Buy Price</label>
-    <input type="number" id="buy_price" name="buy_price" class="form-control" required>
+    <input type="number" id="buy_price" name="buy_price" min="0" max="999999999999" step="1" class="form-control" required>
 </div>
 
 <div class="mb-3">
     <label>Sell Price</label>
-    <input type="number" id="sell_price" name="price" class="form-control" required>
+    <input type="number" id="sell_price" name="price" min="0" max="999999999999" step="1" class="form-control" required>
 </div>
 
 <!--  Margin Buttons -->
@@ -55,7 +55,7 @@
 
 <div class="mb-3">
     <label>Stock</label>
-    <input type="number" name="stock" class="form-control">
+    <input type="number" name="stock" min="0" max="999999999999" step="1" class="form-control">
 </div>
 
 <!-- Image Upload -->

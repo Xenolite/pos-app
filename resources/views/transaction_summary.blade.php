@@ -202,7 +202,7 @@
                     @forelse($topProducts as $item)
 
                     <tr>
-                        <td title="{{ $item->product->name ?? 'Deleted Product' }}">
+                        <td class="product-name" title="{{ $item->product->name ?? 'Deleted Product' }}">
                             {{ \Illuminate\Support\Str::limit($item->product->name ?? 'Deleted Product', 30) }}
                         </td>
                         <td class="text-center">{{ $item->total_sold }}</td>
@@ -213,7 +213,7 @@
 
                     <tr>
                         <td colspan="3" class="text-center py-4 text-muted">
-                            Tidak ada data penjualan pada periode ini
+                            No Data
                         </td>
                     </tr>
 
@@ -322,6 +322,12 @@
     font-weight: 600;
     padding-bottom: 8px;
     border-bottom: 1px solid #ddd;
+}
+.product-name {
+    max-width: 62px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .detail-table tbody td{

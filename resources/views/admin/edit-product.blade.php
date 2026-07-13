@@ -37,14 +37,14 @@
             <!-- Buy Price -->
             <div class="mb-3">
                 <label>Buy Price</label>
-                <input type="number" name="buy_price" id="buy_price"
+                <input type="number" name="buy_price" id="buy_price" min="0" max="999999999999" step="1"
                     class="form-control" value="{{ $product->buy_price }}" required>
             </div>
 
             <!-- Sell Price -->
             <div class="mb-3">
                 <label>Sell Price</label>
-                <input type="number" name="price" id="price"
+                <input type="number" name="price" id="price" min="0" max="999999999999" step="1"
                     class="form-control" value="{{ $product->price }}" required>
             </div>
 
@@ -66,7 +66,7 @@
             <!-- Stock -->
             <div class="mb-3">
                 <label>Stock</label>
-                <input type="number" name="stock" class="form-control"
+                <input type="number" name="stock" class="form-control" min="0" max="999999999999" step="1"
                     value="{{ $product->stock }}" required>
             </div>
 

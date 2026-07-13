@@ -73,7 +73,11 @@
 
         <div class="info-row">
             <strong>Role</strong>
-            <span>{{ auth()->user()->role }}</span>
+            @if(auth()->user()->role == 'admin')
+            <span>Admin</span>
+            @else
+            <span>Cashier</span>
+            @endif
         </div>
 
     </div>

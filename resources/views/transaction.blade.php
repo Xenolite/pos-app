@@ -114,6 +114,14 @@
                         {{ request('payment_method') == 'OVO' ? 'selected' : '' }}>
                         OVO
                     </option>
+                    <option value="LinkAja"
+                        {{ request('payment_method') == 'LinkAja' ? 'selected' : '' }}>
+                        LinkAja
+                    </option>
+                    <option value="ShoppeFood"
+                        {{ request('payment_method') == 'ShoppeFood' ? 'selected' : '' }}>
+                        ShoppeFood
+                    </option>
 
                 </select>
 
