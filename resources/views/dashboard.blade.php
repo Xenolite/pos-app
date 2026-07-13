@@ -350,7 +350,8 @@
                         </button>
                     </form>
 
-                    <img src="{{ $product->image_url }}">
+                    <img src="{{ $product->image_url }}"
+                        style="width: 100%; height: 350px; object-fit: cover;">
 
                     <div class="product-info">
 

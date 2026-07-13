@@ -97,7 +97,8 @@
                 <div class="product-image-wrapper">
 
                     <img src="{{ $product->image_url }}"
-                         class="product-image">
+                         class="product-image"
+                         style="width: 100%; height: 350px; object-fit: cover;">
 
                     @if($product->stock <= 5)
 
