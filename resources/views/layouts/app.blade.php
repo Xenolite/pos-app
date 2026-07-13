@@ -172,7 +172,7 @@
 }
 
 .menu-item:hover{
-    color: white;
+    color: black;
 }
 
 .active-menu{
@@ -348,7 +348,7 @@
 }
 
 .dark-mode .active-menu::after{
-    background: #F97316;
+    background: white;
 }
 .dark-mode .payment-method{
     color:black;
