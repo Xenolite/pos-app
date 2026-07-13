@@ -15,6 +15,7 @@ class POSController extends Controller
     {
         $category = $request->category;
         $search = $request->search;
+        $favoriteOnly = $request->boolean('favorite');
         $products = Product::where('is_active', true)
         ->when($category, function ($query) use ($category) {
             $query->where('category', $category);
@@ -22,6 +23,11 @@ class POSController extends Controller
         ->when($search, function ($query) use ($search) {
             $query->where('name', 'ilike', '%'.$search.'%');
         })
+        ->when($favoriteOnly, function ($query) {
+            $query->where('is_favorite', 1);
+        })
+        ->orderByDesc('is_favorite')
+        ->orderBy('name')
         ->get();
 
  $lowStockProducts = Product::whereColumn('stock', '<=', 'low_stock_limit')
@@ -42,8 +48,22 @@ class POSController extends Controller
         'todaySales',
         'todayTransactions',
         'categories',
-        'lowStockProducts'
+        'lowStockProducts',
+        'favoriteOnly'
     ));
+    }
+
+    /**
+     * Toggle status favorite sebuah produk dari cashier dashboard.
+     * Cukup 1 klik ikon bintang di product card, tanpa perlu masuk ke halaman admin.
+     */
+    public function toggleFavorite($id)
+    {
+        $product = Product::findOrFail($id);
+        $product->is_favorite = ! $product->is_favorite;
+        $product->save();
+
+        return redirect()->back();
     }
 
     public function clearCart()

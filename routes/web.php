@@ -21,6 +21,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/cart/add', [POSController::class, 'addToCart'])->name('cart.add');
     Route::get('/remove/{id}', [POSController::class, 'removeFromCart']);
     Route::post('/cart/update-quantity/{id}', [POSController::class, 'updateCartQuantity'])->name('cart.updateQuantity');
+    Route::post('/products/{id}/toggle-favorite', [POSController::class, 'toggleFavorite'])->name('products.toggleFavorite');
      Route::post('/checkout', [POSController::class, 'checkout']);
     Route::get('/products', [POSController::class, 'products'])
     ->name('products');

@@ -17,12 +17,14 @@ class Product extends Model
     'stock',
     'image',
     'price_after_tax',
-    'is_active'
+    'is_active',
+    'is_favorite'
     ];
 
     protected $casts = [
     'is_active' => 'boolean',
     'price_after_tax' => 'boolean',
+    'is_favorite' => 'boolean',
 ];
 
     /**

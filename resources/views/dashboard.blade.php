@@ -304,8 +304,12 @@
 
                 <div class="category-list">
                     <a href="{{ route('dashboard', ['search' => request('search')]) }}"
-                       class="category-btn {{ !request('category') ? 'active' : '' }}">
+                       class="category-btn {{ !request('category') && !$favoriteOnly ? 'active' : '' }}">
                         All
+                    </a>
+                    <a href="{{ route('dashboard', ['favorite' => 1, 'search' => request('search')]) }}"
+                       class="category-btn favorite-tab {{ $favoriteOnly ? 'active' : '' }}">
+                        <i class="bi bi-star-fill"></i> Favorites
                     </a>
                     @foreach($categories as $cat)
                         <a href="{{ route('dashboard', ['category' => $cat, 'search' => request('search')]) }}"
@@ -334,6 +338,17 @@
                 @forelse($products as $product)
 
                 <div class="product-card">
+
+                    <form action="{{ route('products.toggleFavorite', $product->id) }}"
+                          method="POST"
+                          class="favorite-form">
+                        @csrf
+                        <button type="submit"
+                                class="favorite-btn"
+                                title="{{ $product->is_favorite ? 'Remove from favorites' : 'Add to favorites' }}">
+                            <i class="bi {{ $product->is_favorite ? 'bi-star-fill' : 'bi-star' }}"></i>
+                        </button>
+                    </form>
 
                     <img src="{{ $product->image_url }}">
 
@@ -673,6 +688,52 @@ document.addEventListener('DOMContentLoaded', syncServiceCharge);
     border-radius: 20px;
     overflow: hidden;
     box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+    position: relative;
+}
+
+.favorite-form{
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 2;
+    margin: 0;
+}
+
+.favorite-btn{
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255,255,255,0.92);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+    font-size: 16px;
+    line-height: 1;
+    transition: transform .15s ease;
+}
+
+.favorite-btn:hover{
+    transform: scale(1.12);
+}
+
+.favorite-btn .bi-star{
+    color: #b5b5b5;
+}
+
+.favorite-btn .bi-star-fill{
+    color: #F97316;
+}
+
+.category-btn.favorite-tab{
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.category-btn.favorite-tab i{
+    font-size: 13px;
 }
 
 .product-card img{
