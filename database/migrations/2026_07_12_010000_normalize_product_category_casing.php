@@ -6,20 +6,12 @@ use Illuminate\Support\Str;
 
 class NormalizeProductCategoryCasing extends Migration
 {
-    /**
-     * "Minuman", "minuman", and "MINUMAN" were previously stored as 3
-     * separate categories because the category field was free text with
-     * no normalization. This one-time cleanup merges them into a single
-     * canonical Title Case value (e.g. "Minuman"), matching the
-     * normalization now applied on every new save in
-     * ProductController@store / @update.
-     */
+    
     public function up(): void
     {
         $products = DB::table('products')->select('id', 'category')->get();
 
-        // Group by lowercased category so "Minuman"/"minuman"/"MINUMAN"
-        // all resolve to the same canonical form.
+       
         $canonical = [];
 
         foreach ($products as $product) {

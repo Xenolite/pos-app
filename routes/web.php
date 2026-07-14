@@ -6,9 +6,7 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
 
-// Webhook Midtrans: dipanggil server-to-server oleh Midtrans, jadi HARUS di
-// luar middleware 'auth' dan dikecualikan dari verifikasi CSRF
-// (tambahkan 'midtrans/notification' ke $except di app/Http/Middleware/VerifyCsrfToken.php).
+
 Route::post('/midtrans/notification', [POSController::class, 'midtransNotification'])
     ->name('midtrans.notification');
 

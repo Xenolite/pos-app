@@ -53,10 +53,7 @@ class POSController extends Controller
     ));
     }
 
-    /**
-     * Toggle status favorite sebuah produk dari cashier dashboard.
-     * Cukup 1 klik ikon bintang di product card, tanpa perlu masuk ke halaman admin.
-     */
+   
     public function toggleFavorite($id)
     {
         $product = Product::findOrFail($id);
@@ -136,7 +133,7 @@ class POSController extends Controller
 
         $quantity = (int) $request->quantity;
 
-        // Quantity 0 (atau kurang) = sama aja kayak hapus item itu dari cart.
+       
         if ($quantity <= 0) {
             unset($cart[$id]);
             session()->put('cart', $cart);
@@ -145,9 +142,7 @@ class POSController extends Controller
 
         $product = Product::find($id);
 
-        // Jangan izinkan quantity di cart lebih besar dari stock yang
-        // sebenarnya ada — sama seperti batasan waktu pertama kali
-        // ditambahkan lewat modal Add to Cart.
+   
         if ($product && $quantity > $product->stock) {
             $quantity = $product->stock;
         }
@@ -188,7 +183,7 @@ class POSController extends Controller
     
     $total += $serviceCharge;
 
-    // CASH = langsung lunas di kasir, stok langsung dipotong seperti alur lama.
+    
     if ($paymentMethod === 'Cash') {
 
         $transaction = Transaction::create([
@@ -208,13 +203,7 @@ class POSController extends Controller
         return redirect()->back()->with('success', 'Transaction completed!');
     }
 
-    // NON-CASH (QRIS, Transfer, e-wallet, dst) = dibayar via Midtrans Snap.
-    // TIDAK ADA baris transaksi yang dibuat di sini. Detail order (cart,
-    // total, dst) disimpan sementara di cache (bukan tabel transactions)
-    // selama menunggu hasil akhir dari Midtrans. Baris transaksi baru
-    // benar-benar dibuat begitu hasilnya final -- "paid" (Berhasil) atau
-    // "failed" (Gagal) -- lewat finalizeMidtransOrder(). Jadi tidak pernah
-    // ada status "pending" yang tercatat di riwayat transaksi.
+   
     $orderId = 'POS-'.now()->timestamp.'-'.\Illuminate\Support\Str::random(8);
 
     \Illuminate\Support\Facades\Cache::put("midtrans_order:{$orderId}", [
@@ -226,9 +215,7 @@ class POSController extends Controller
         'payment_method' => $paymentMethod,
     ], now()->addHours(24));
 
-    // Cart langsung dikosongkan begitu order dibuat (bukan menunggu pembayaran
-    // selesai) -- sama seperti alur Cash, supaya panel cart di dashboard tidak
-    // menampilkan item yang sudah "dipesan".
+
     session()->forget('cart');
 
     $itemDetails = [];
@@ -266,11 +253,7 @@ class POSController extends Controller
     ]);
 }
 
-/**
- * Webhook Midtrans (server-to-server notification). Route ini harus
- * dikecualikan dari CSRF middleware karena dipanggil oleh server Midtrans,
- * bukan dari browser.
- */
+
 public function midtransNotification(\App\Services\MidtransService $midtrans)
 {
     $notification = $midtrans->handleNotification();
@@ -285,11 +268,7 @@ public function midtransNotification(\App\Services\MidtransService $midtrans)
     return response()->json(['message' => 'OK']);
 }
 
-/**
- * "Cek Status" otomatis -- dipanggil dari frontend saat popup Snap
- * ditutup/error, supaya order yang belum dapat webhook langsung
- * disinkronkan ke status asli di Midtrans tanpa harus menunggu.
- */
+
 public function checkOrderStatus($orderId, \App\Services\MidtransService $midtrans)
 {
     // Sudah final (baris transaksi sudah dibuat) -- tidak perlu tanya ulang.
@@ -313,23 +292,14 @@ public function checkOrderStatus($orderId, \App\Services\MidtransService $midtra
     return response()->json(['message' => 'Checked']);
 }
 
-/**
- * Ubah order yang tersimpan di cache menjadi baris transaksi final --
- * HANYA kalau hasilnya sudah pasti "berhasil" (paid) atau "gagal" (failed).
- * Kalau status dari Midtrans masih benar-benar "pending" (mis. menunggu
- * customer transfer/scan QRIS), tidak ada apa pun yang dicatat -- order
- * tetap menunggu di cache sampai ada notifikasi berikutnya yang final.
- * Dipakai bersama oleh webhook dan endpoint "cek status" manual supaya
- * kedua jalur selalu konsisten.
- */
+
 private function finalizeMidtransOrder(?string $orderId, ?string $status, ?string $fraud, ?string $paymentType = null): void
 {
     if (! $orderId) {
         return;
     }
 
-    // Sudah pernah difinalisasi sebelumnya (mis. webhook dikirim ulang oleh
-    // Midtrans, atau notifikasi lain untuk order yang sama menyusul).
+
     if (Transaction::where('midtrans_order_id', $orderId)->exists()) {
         return;
     }
@@ -338,8 +308,7 @@ private function finalizeMidtransOrder(?string $orderId, ?string $status, ?strin
     $order = \Illuminate\Support\Facades\Cache::get($cacheKey);
 
     if (! $order) {
-        // Order tidak ditemukan (sudah kedaluwarsa di cache, atau order_id
-        // tidak valid) -- tidak ada apa pun yang bisa difinalisasi.
+
         return;
     }
 
@@ -347,8 +316,7 @@ private function finalizeMidtransOrder(?string $orderId, ?string $status, ?strin
     $isFinalFailure = in_array($status, ['cancel', 'deny', 'expire']);
 
     if (! $isSuccess && ! $isFinalFailure) {
-        // Masih pending beneran -- jangan catat apa pun dulu, tunggu
-        // notifikasi berikutnya yang final.
+
         return;
     }
 
@@ -365,10 +333,10 @@ private function finalizeMidtransOrder(?string $orderId, ?string $status, ?strin
     ]);
 
     if ($isSuccess) {
-        // Berhasil -> potong stok & catat item.
+        
         $this->deductStockAndSaveItems($transaction, $order['cart']);
     } else {
-        // Gagal -> tetap catat item untuk riwayat, stok TIDAK dipotong.
+        
         $this->saveTransactionItems($transaction, $order['cart']);
     }
 
@@ -398,10 +366,7 @@ private function deductStockAndSaveItems(Transaction $transaction, array $cart)
     }
 }
 
-/**
- * Simpan item transaksi TANPA memotong stok -- dipakai untuk transaksi
- * non-cash yang berakhir "failed" (gagal/dibatalkan/expired di Midtrans).
- */
+
 private function saveTransactionItems(Transaction $transaction, array $cart)
 {
     foreach ($cart as $id => $item) {
@@ -475,7 +440,7 @@ public function transactions(Request $request)
 
 public function transactionSummary(Request $request)
 {
-    // FILTER JANGKA WAKTU (period): today, week, month, year, atau custom (start_date/end_date)
+   
     $period = $request->period ?: 'month';
 
     if ($period === 'custom' && $request->start_date && $request->end_date) {
@@ -504,7 +469,7 @@ public function transactionSummary(Request $request)
         }
     }
 
-    // Hanya transaksi yang berhasil (paid) yang dihitung sebagai penjualan
+  
     $baseQuery = Transaction::query()
         ->where('payment_status', 'paid')
         ->whereBetween('created_at', [$startDate, $endDate]);

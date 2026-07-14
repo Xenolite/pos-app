@@ -27,12 +27,7 @@ class Product extends Model
     'is_favorite' => 'boolean',
 ];
 
-    /**
-     * Full public URL of the product image, served from Supabase Storage.
-     * Centralizing this here means views never build the storage path
-     * manually (asset('storage/'.$product->image)) — if the disk or
-     * folder structure ever changes, it only needs to be updated once.
-     */
+    
     public function getImageUrlAttribute(): string
     {
         if (! $this->image) {

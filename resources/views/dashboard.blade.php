@@ -46,10 +46,7 @@
                 $discountTotal += ($lineOriginal - $lineActual);
             }
 
-            // Belum ada mekanisme pajak transaksi di backend saat ini —
-            // price_after_tax di produk cuma flag apakah harga jual sudah
-            // termasuk pajak atau belum, bukan nilai pajak yang dihitung
-            // terpisah. Ditampilkan Rp 0 sampai ada logic pajak yang jelas.
+           
             $taxTotal = 0;
             $grandTotal = $subtotal - $discountTotal;
         @endphp
@@ -471,9 +468,7 @@ function selectPayment(method, button)
     document.getElementById('payment_method').value = method;
 }
 
-// CASH tetap submit form biasa (redirect langsung, transaksi lunas di kasir).
-// Metode lain (QRIS/Transfer/e-wallet/dst) dikirim via AJAX ke /checkout,
-// lalu Midtrans Snap dimunculkan sebagai popup pembayaran.
+
 document.getElementById('checkoutForm').addEventListener('submit', function (e) {
 
     const method = document.getElementById('payment_method').value;
@@ -517,17 +512,12 @@ document.getElementById('checkoutForm').addEventListener('submit', function (e) 
                 window.location.href = window.location.pathname;
             },
             onError: function () {
-                // Sync with Midtrans in case the transaction actually has a
-                // final status server-side, instead of leaving it unrecorded.
+
                 syncTransactionStatus(data.order_id);
                 alert('Payment failed. Please try again.');
             },
             onClose: function () {
-                // Customer closed the Snap popup without finishing payment.
-                // The underlying payment (e.g. a VA number) may still be valid,
-                // so we ask Midtrans for the real status rather than assuming
-                // it failed -- a transaction is only recorded once the result
-                // is final: paid (berhasil) or failed (gagal).
+              
                 syncTransactionStatus(data.order_id);
             }
         });
@@ -539,10 +529,7 @@ document.getElementById('checkoutForm').addEventListener('submit', function (e) 
     });
 });
 
-// Panggil endpoint "cek status" supaya order non-cash yang popup Snap-nya
-// ditutup/error langsung disinkronkan ke status asli di Midtrans. Order
-// hanya akan tercatat di riwayat transaksi kalau hasilnya sudah final:
-// berhasil (paid) atau gagal (failed) -- tidak pernah ada status "pending".
+
 function syncTransactionStatus(orderId) {
     if (!orderId) return;
 
@@ -553,14 +540,11 @@ function syncTransactionStatus(orderId) {
             'Accept': 'application/json',
         },
     }).catch(() => {
-        // Silent fail -- if this happens, Midtrans's own webhook (or the next
-        // time this order is checked) will still resolve it eventually.
+
     });
 }
 
-// Discount Value field should only be editable when a discount type
-// (Percentage/Fixed) is actually selected — keeps it disabled + zeroed
-// while "No Discount" is picked, so it can't be filled in for nothing.
+
 function toggleDiscountValue(select)
 {
     const form = select.closest('form');
@@ -574,8 +558,7 @@ function toggleDiscountValue(select)
     }
 }
 
-// Keep the payment modal's service charge + total breakdown in sync
-// with whatever the cashier types in the main Order List panel.
+
 function syncServiceCharge()
 {
     const raw = document.getElementById('service_charge').value;

@@ -164,7 +164,7 @@
 
                 </button>
                 
-                <!-- EXPORT EXCEL (ikut filter yang sedang aktif) -->
+                
                 <a href="{{ route('transactions.export', request()->query()) }}"
                    class="btn btn-success w-100 text-center">
                     Export Excel
@@ -286,8 +286,7 @@
         {{ $transactions->links() }}
     </div>
 
-    <!-- MODALS (dipindahkan ke luar <table>; sebelumnya berada di dalam <tbody> sehingga browser
-         memaksa-keluarkan <div> modal dari tabel, membuat tampilan tabel rusak) -->
+
     @foreach($transactions as $transaction)
 
     <div class="modal fade"
