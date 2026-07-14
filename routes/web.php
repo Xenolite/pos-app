@@ -19,6 +19,8 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/dashboard', [POSController::class, 'index'])->name('dashboard');
     Route::post('/cart/add', [POSController::class, 'addToCart'])->name('cart.add');
+    Route::get('/cart/clear', [POSController::class, 'clearCart'])
+    ->name('cart.clear');
     Route::get('/remove/{id}', [POSController::class, 'removeFromCart']);
     Route::post('/cart/update-quantity/{id}', [POSController::class, 'updateCartQuantity'])->name('cart.updateQuantity');
     Route::post('/products/{id}/toggle-favorite', [POSController::class, 'toggleFavorite'])->name('products.toggleFavorite');
@@ -74,8 +76,7 @@ Route::delete('/admin/products/{id}/force-delete', [ProductController::class, 'f
 
     Route::post('/admin/send-report-now', [AdminController::class, 'sendReportNow'])
     ->name('admin.send.report.now');
-    Route::get('/cart/clear', [POSController::class, 'clearCart'])
-    ->name('cart.clear');
+    
 
     Route::get('/admin/analytics', [AdminController::class, 'analytics'])
     ->name('admin.analytics');

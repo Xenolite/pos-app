@@ -83,7 +83,7 @@
 
                 </a>
 
-                <!-- LINKS -->
+                <!-- LINKS
                 <div class="text-center mt-4">
 
                     @if (Route::has('password.request'))
@@ -93,7 +93,7 @@
                         </a>
                     @endif
 
-                </div>
+                </div> -->
 
             </div>
         </div>
