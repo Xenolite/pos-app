@@ -148,6 +148,12 @@ document.addEventListener('DOMContentLoaded', function(){
 
     const ctx = canvas.getContext('2d');
 
+    // Deteksi dark mode dari class di <body> supaya warna teks/grid
+    // chart ikut menyesuaikan dan tetap terbaca.
+    const isDark = document.body.classList.contains('dark-mode');
+    const textColor = isDark ? '#e5e5e5' : '#374151';
+    const gridColor = isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.08)';
+
     new Chart(ctx, {
 
         type: 'line',
@@ -196,6 +202,32 @@ document.addEventListener('DOMContentLoaded', function(){
             interaction: {
                 intersect: false,
                 mode: 'index'
+            },
+
+            plugins: {
+                legend: {
+                    labels: {
+                        color: textColor
+                    }
+                },
+                tooltip: {
+                    titleColor: textColor,
+                    bodyColor: textColor,
+                    backgroundColor: isDark ? '#2a2a26' : '#fff',
+                    borderColor: gridColor,
+                    borderWidth: 1
+                }
+            },
+
+            scales: {
+                x: {
+                    ticks: { color: textColor },
+                    grid: { color: gridColor }
+                },
+                y: {
+                    ticks: { color: textColor },
+                    grid: { color: gridColor }
+                }
             }
         }
 

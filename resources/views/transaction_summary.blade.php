@@ -116,15 +116,18 @@
                 <div class="summary-value">{{ number_format($totalTransactions) }}</div>
             </div>
 
+            @if(auth()->user()->role === 'admin')
             <div class="summary-metric">
                 <div class="summary-title">Total Profit</div>
                 <div class="summary-value text-primary">Rp {{ number_format($totalProfit) }}</div>
             </div>
 
             <div class="summary-metric">
-                <div class="summary-title">Average / Transaksi</div>
+                <div class="summary-title">Average / Transaction</div>
                 <div class="summary-value">Rp {{ number_format($averageTransaction) }}</div>
             </div>
+            @endif
+            
 
             <div class="summary-metric">
                 <div class="summary-title">Total Service Charge</div>
